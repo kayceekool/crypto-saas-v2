@@ -1,19 +1,30 @@
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [message, setMessage] = useState("Loading...");
+  const [prices, setPrices] = useState(null);
 
   useEffect(() => {
-    fetch("https://crypto-saas-v2.onrender.com")
+    fetch("https://crypto-saas-v2.onrender.com/prices")
       .then(res => res.json())
-      .then(data => setMessage(data.status || data.message))
-      .catch(() => setMessage("Backend connection failed"));
+      .then(data => setPrices(data))
+      .catch(() => setPrices("error"));
   }, []);
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>🚀 Crypto SaaS Live</h1>
-      <p><strong>Backend Response:</strong> {message}</p>
+      <h1>🚀 Crypto Dashboard</h1>
+
+      {!prices && <p>Loading prices...</p>}
+
+      {prices && prices !== "error" && (
+        <div>
+          <p>BTC: ${prices.bitcoin.usd}</p>
+          <p>ETH: ${prices.ethereum.usd}</p>
+          <p>BNB: ${prices.binancecoin.usd}</p>
+        </div>
+      )}
+
+      {prices === "error" && <p>Failed to load prices</p>}
     </div>
   );
 }
