@@ -9,22 +9,25 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         if (!data || data.error) {
-          setError("Invalid data from backend");
+          setError("Failed to load prices");
         } else {
           setPrices(data);
         }
       })
-      .catch(() => setError("Failed to fetch prices"));
+      .catch(() => setError("Backend connection failed"));
   }, []);
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>🚀 Crypto Dashboard</h1>
 
+      {/* Loading */}
       {!prices && !error && <p>Loading prices...</p>}
 
+      {/* Error */}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
+      {/* Data */}
       {prices && prices.bitcoin && (
         <div>
           <p>BTC: ${prices.bitcoin?.usd ?? "N/A"}</p>
