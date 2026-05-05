@@ -40,7 +40,8 @@ export default function Home() {
           </tr>
         </thead>
         <tbody>
-          {coins.map((coin, i) => (
+          {coins && coins.length > 0 ? coins.map((coin, i) => (
+{coins.length === 0 && <p>Loading scanner data...</p>}
             <tr key={i} style={{ textAlign: "center" }}>
               <td style={cell}>{coin.name}</td>
               <td style={cell}>${coin.price}</td>
