@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
+} from "recharts";
 
 export default function Home() {
   const [prices, setPrices] = useState(null);
-  const [error, setError] = useState(null);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     const fetchPrices = () => {
@@ -10,19 +13,21 @@ export default function Home() {
         .then(res => res.json())
         .then(data => {
           if (data && data.bitcoin) {
-            setPrices(data);     // ✅ update only when valid
-            setError(null);
-          } else {
-            setError("Temporary issue… retrying");
+            setPrices(data);
+
+            // Add to chart history
+            setHistory(prev => [
+              ...prev.slice(-20), // keep last 20 points
+              {
+                time: new Date().toLocaleTimeString(),
+                btc: data.bitcoin.usd
+              }
+            ]);
           }
-        })
-        .catch(() => {
-          setError("Connection issue… retrying");
         });
     };
 
     fetchPrices();
-
     const interval = setInterval(fetchPrices, 10000);
 
     return () => clearInterval(interval);
@@ -34,42 +39,31 @@ export default function Home() {
     background: "#111",
     color: "#0f0",
     minWidth: "120px",
-    textAlign: "center",
-    fontSize: "18px",
-    boxShadow: "0 0 10px rgba(0,255,0,0.3)"
+    textAlign: "center"
   };
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1>🚀 Crypto Dashboard</h1>
 
-      {/* Show error but DO NOT remove prices */}
-      {error && <p style={{ color: "orange" }}>{error}</p>}
-
-      {/* Keep last good data */}
-      {prices ? (
-        <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
-          <div style={card}>
-            <strong>BTC</strong>
-            <br />
-            ${prices.bitcoin?.usd ?? "N/A"}
-          </div>
-
-          <div style={card}>
-            <strong>ETH</strong>
-            <br />
-            ${prices.ethereum?.usd ?? "N/A"}
-          </div>
-
-          <div style={card}>
-            <strong>BNB</strong>
-            <br />
-            ${prices.binancecoin?.usd ?? "N/A"}
-          </div>
+      {prices && (
+        <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
+          <div style={card}>BTC<br/>${prices.bitcoin.usd}</div>
+          <div style={card}>ETH<br/>${prices.ethereum.usd}</div>
+          <div style={card}>BNB<br/>${prices.binancecoin.usd}</div>
         </div>
-      ) : (
-        <p>Loading prices...</p>
       )}
+
+      <h3>📈 BTC Live Chart</h3>
+
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={history}>
+          <XAxis dataKey="time" />
+          <YAxis />
+          <Tooltip />
+          <Line type="monotone" dataKey="btc" />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
