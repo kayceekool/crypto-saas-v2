@@ -1,13 +1,18 @@
 import time
+import requests
+from fastapi import FastAPI
 
-scan_cache = None
+app = FastAPI()
+
+# 🔒 cache (prevents API rate limit issues)
+scan_cache = []
 scan_last = 0
 
 @app.get("/scan")
 def scan_market():
     global scan_cache, scan_last
 
-    # ✅ Cache for 30 seconds (prevents rate limit)
+    # ⏱️ return cached data if within 30 seconds
     if scan_cache and (time.time() - scan_last < 30):
         return scan_cache
 
@@ -16,28 +21,35 @@ def scan_market():
         response = requests.get(url, timeout=10)
         data = response.json()
 
-        # 🚨 Handle API rate limit or bad response
+        # 🚨 block invalid / rate-limited responses
         if not isinstance(data, dict) or "status" in data:
-            return scan_cache if scan_cache else []
+            return scan_cache
 
         result = []
 
         for coin, info in data.items():
+            # skip anything invalid
+            if not isinstance(info, dict):
+                continue
+
             result.append({
                 "name": coin.upper(),
                 "price": info.get("usd", 0),
                 "change": round(info.get("usd_24h_change", 0), 2)
             })
 
-        # 🔥 Sort by biggest movers
+        # 🚨 if nothing valid came back
+        if len(result) == 0:
+            return scan_cache
+
+        # 🔥 sort by biggest movers
         result = sorted(result, key=lambda x: abs(x["change"]), reverse=True)
 
-        # ✅ Save cache
+        # 💾 save cache
         scan_cache = result
         scan_last = time.time()
 
         return result
 
     except Exception:
-        # ✅ Return last good data if error
-        return scan_cache if scan_cache else []
+        return scan_cache
