@@ -9,19 +9,21 @@ export default function Home() {
       fetch("https://crypto-saas-v2.onrender.com/prices")
         .then(res => res.json())
         .then(data => {
-          if (!data || data.error) {
-            setError("Failed to load prices");
-          } else {
-            setPrices(data);
+          if (data && data.bitcoin) {
+            setPrices(data);     // ✅ update only when valid
             setError(null);
+          } else {
+            setError("Temporary issue… retrying");
           }
         })
-        .catch(() => setError("Backend connection failed"));
+        .catch(() => {
+          setError("Connection issue… retrying");
+        });
     };
 
-    fetchPrices(); // initial load
+    fetchPrices();
 
-    const interval = setInterval(fetchPrices, 10000); // refresh every 10s
+    const interval = setInterval(fetchPrices, 10000);
 
     return () => clearInterval(interval);
   }, []);
@@ -41,33 +43,32 @@ export default function Home() {
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1>🚀 Crypto Dashboard</h1>
 
-      {/* Loading */}
-      {!prices && !error && <p>Loading prices...</p>}
+      {/* Show error but DO NOT remove prices */}
+      {error && <p style={{ color: "orange" }}>{error}</p>}
 
-      {/* Error */}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {/* Prices */}
-      {prices && prices.bitcoin && (
+      {/* Keep last good data */}
+      {prices ? (
         <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
           <div style={card}>
             <strong>BTC</strong>
             <br />
-            ${prices.bitcoin.usd}
+            ${prices.bitcoin?.usd ?? "N/A"}
           </div>
 
           <div style={card}>
             <strong>ETH</strong>
             <br />
-            ${prices.ethereum.usd}
+            ${prices.ethereum?.usd ?? "N/A"}
           </div>
 
           <div style={card}>
             <strong>BNB</strong>
             <br />
-            ${prices.binancecoin.usd}
+            ${prices.binancecoin?.usd ?? "N/A"}
           </div>
         </div>
+      ) : (
+        <p>Loading prices...</p>
       )}
     </div>
   );
