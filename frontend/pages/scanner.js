@@ -5,84 +5,97 @@ export default function Scanner() {
   const [status, setStatus] = useState("Loading scanner...");
 
   useEffect(() => {
-    async function loadScanner() {
-      try {
-        setStatus("Connecting to backend...");
-
-        const response = await fetch(
-          "https://crypto-saas-v2.onrender.com/scan"
-        );
-
-        const data = await response.json();
-
-        console.log(data);
+    fetch("https://crypto-saas-v2.onrender.com/scanner")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Scanner API:", data);
 
         if (Array.isArray(data)) {
           setCoins(data);
           setStatus("");
         } else {
-          setStatus("No tokens received");
+          setStatus("Invalid scanner response");
         }
-
-      } catch (error) {
-        console.log(error);
-        setStatus("Backend temporarily waking up...");
-      }
-    }
-
-    loadScanner();
+      })
+      .catch((err) => {
+        console.log(err);
+        setStatus("Connection error");
+      });
   }, []);
 
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "20px",
+  };
+
+  const headStyle = {
+    background: "#000",
+    color: "#39ff14",
+    fontSize: "22px",
+  };
+
+  const cellStyle = {
+    padding: "14px",
+    borderBottom: "1px solid #333",
+    textAlign: "center",
+    fontSize: "18px",
+  };
+
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🚀 Crypto Scanner</h1>
+    <div
+      style={{
+        background: "#f4f4f4",
+        minHeight: "100vh",
+        padding: "20px",
+        fontFamily: "Arial",
+      }}
+    >
+      <h1 style={{ fontSize: "56px", marginBottom: "20px" }}>
+        🚀 Crypto Scanner
+      </h1>
 
       {status && (
-        <p style={{ color: "red" }}>
-          {status}
-        </p>
+        <p style={{ color: "red", fontSize: "24px" }}>{status}</p>
       )}
 
-      <table
-        border="1"
-        cellPadding="10"
-        style={{
-          marginTop: 20,
-          width: "100%",
-          borderCollapse: "collapse"
-        }}
-      >
-        <thead style={{ background: "black", color: "lime" }}>
-          <tr>
-            <th>Token</th>
-            <th>Price ($)</th>
-            <th>24h %</th>
-          </tr>
-        </thead>
+      {coins.length === 0 && (
+        <p style={{ fontSize: "22px" }}>Loading scanner data...</p>
+      )}
 
-        <tbody>
-          {coins.map((coin, index) => (
-            <tr key={index}>
-              <td>{coin.name}</td>
-
-              <td>
-                ${coin.price}
-              </td>
-
-              <td
-                style={{
-                  color:
-                    coin.change >= 0
-                      ? "green"
-                      : "red"
-                }}
-              >
-                {coin.change}%
-              </td>
+      {coins.length > 0 && (
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={headStyle}>Token</th>
+              <th style={headStyle}>Price ($)</th>
+              <th style={headStyle}>24h %</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {coins.map((coin, i) => (
+              <tr key={i}>
+                <td style={cellStyle}>{coin.name}</td>
+
+                <td style={cellStyle}>
+                  ${Number(coin.price).toLocaleString()}
+                </td>
+
+                <td
+                  style={{
+                    ...cellStyle,
+                    color: coin.change >= 0 ? "limegreen" : "red",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {coin.change}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
