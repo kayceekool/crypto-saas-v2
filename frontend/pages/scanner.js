@@ -2,42 +2,56 @@ import { useEffect, useState } from "react";
 
 export default function Scanner() {
   const [coins, setCoins] = useState([]);
-  const [error, setError] = useState("Loading...");
+  const [status, setStatus] = useState("Loading scanner...");
 
   useEffect(() => {
-    const fetchScan = async () => {
+    async function loadScanner() {
       try {
-        const res = await fetch("https://crypto-saas-v2.onrender.com/scan");
+        setStatus("Connecting to backend...");
 
-        if (!res.ok) throw new Error("Server waking up");
+        const response = await fetch(
+          "https://crypto-saas-v2.onrender.com/scan"
+        );
 
-        const data = await res.json();
+        const data = await response.json();
 
-        if (Array.isArray(data) && data.length > 0) {
+        console.log(data);
+
+        if (Array.isArray(data)) {
           setCoins(data);
-          setError(null);
+          setStatus("");
         } else {
-          setError("No data yet...");
+          setStatus("No tokens received");
         }
 
-      } catch (err) {
-        console.log("Retrying...", err);
-        setError("Connecting...");
-
-        setTimeout(fetchScan, 3000); // retry
+      } catch (error) {
+        console.log(error);
+        setStatus("Backend temporarily waking up...");
       }
-    };
+    }
 
-    fetchScan();
+    loadScanner();
   }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: 20 }}>
       <h1>🚀 Crypto Scanner</h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {status && (
+        <p style={{ color: "red" }}>
+          {status}
+        </p>
+      )}
 
-      <table style={{ width: "100%", marginTop: "20px" }}>
+      <table
+        border="1"
+        cellPadding="10"
+        style={{
+          marginTop: 20,
+          width: "100%",
+          borderCollapse: "collapse"
+        }}
+      >
         <thead style={{ background: "black", color: "lime" }}>
           <tr>
             <th>Token</th>
@@ -45,12 +59,24 @@ export default function Scanner() {
             <th>24h %</th>
           </tr>
         </thead>
+
         <tbody>
-          {coins.map((coin, i) => (
-            <tr key={i}>
+          {coins.map((coin, index) => (
+            <tr key={index}>
               <td>{coin.name}</td>
-              <td>${coin.price}</td>
-              <td style={{ color: coin.change > 0 ? "green" : "red" }}>
+
+              <td>
+                ${coin.price}
+              </td>
+
+              <td
+                style={{
+                  color:
+                    coin.change >= 0
+                      ? "green"
+                      : "red"
+                }}
+              >
                 {coin.change}%
               </td>
             </tr>
