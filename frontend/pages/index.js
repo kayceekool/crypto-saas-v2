@@ -5,31 +5,46 @@ export default function Home() {
   const [status, setStatus] = useState("Loading scanner data...");
 
   useEffect(() => {
-    async function loadScanner() {
-      try {
-        const response = await fetch(
-          "https://crypto-saas-v2.onrender.com/scan"
-        );
+  async function loadScanner() {
+    try {
+      setStatus("Connecting to backend...");
 
-        const data = await response.json();
-
-        console.log("SCAN DATA:", data);
-
-        if (Array.isArray(data) && data.length > 0) {
-          setCoins(data);
-          setStatus("");
-        } else {
-          setStatus("No scanner data received");
+      const response = await fetch(
+        "https://crypto-saas-v2.onrender.com/scan",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
+      );
 
-      } catch (error) {
-        console.log(error);
-        setStatus("Backend connection failed");
+      if (!response.ok) {
+        throw new Error("Backend not ready");
       }
-    }
 
-    loadScanner();
-  }, []);
+      const data = await response.json();
+
+      console.log(data);
+
+      if (Array.isArray(data)) {
+        setCoins(data);
+        setStatus("");
+      } else {
+        setStatus("No scanner data");
+      }
+
+    } catch (error) {
+      console.log(error);
+
+      setStatus(
+        "Backend waking up... refresh in 30 seconds"
+      );
+    }
+  }
+
+  loadScanner();
+}, []);
 
   const page = {
     background: "#111",
