@@ -14,48 +14,64 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-scan_cache = []
-scan_last = 0
+cache = []
+last_update = 0
 
 
 @app.get("/scan")
-def scan_market():
-    global scan_cache, scan_last
+def scan():
+    global cache, last_update
 
-    # return cached data if fresh
-    if scan_cache and (time.time() - scan_last < 30):
-        return JSONResponse(content=scan_cache)
+    # return cache if fresh
+    if cache and time.time() - last_update < 30:
+        return JSONResponse(content=cache)
 
     try:
-        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,solana,xrp,cardano,dogecoin,tron,polygon&vs_currencies=usd&include_24hr_change=true"
-        response = requests.get(url, timeout=10)
-        data = response.json()
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            "ids": "bitcoin,ethereum,binancecoin,solana,xrp,cardano,dogecoin,tron,polygon",
+            "vs_currencies": "usd",
+            "include_24hr_change": "true"
+        }
+
+        r = requests.get(url, params=params, timeout=10)
+
+        print("CoinGecko status:", r.status_code)
+        print("CoinGecko response:", r.text)
+
+        data = r.json()
 
         if not isinstance(data, dict):
-            return JSONResponse(content=scan_cache)
+            return JSONResponse(content=cache if cache else [
+                {"name": "ERROR", "price": 0, "change": 0}
+            ])
 
         result = []
 
         for coin, info in data.items():
-            if not isinstance(info, dict):
-                continue
+            if isinstance(info, dict):
+                result.append({
+                    "name": coin.upper(),
+                    "price": info.get("usd", 0),
+                    "change": round(info.get("usd_24h_change", 0), 2)
+                })
 
-            result.append({
-                "name": coin.upper(),
-                "price": info.get("usd", 0),
-                "change": round(info.get("usd_24h_change", 0), 2)
-            })
-
+        # IMPORTANT: never return fake STATUS object
         if not result:
-            return JSONResponse(content=scan_cache)
+            return JSONResponse(content=[
+                {"name": "NO DATA", "price": 0, "change": 0}
+            ])
 
         result = sorted(result, key=lambda x: abs(x["change"]), reverse=True)
 
-        scan_cache = result
-        scan_last = time.time()
+        cache = result
+        last_update = time.time()
 
         return JSONResponse(content=result)
 
     except Exception as e:
-        print("ERROR:", e)
-        return JSONResponse(content=scan_cache)
+        print("SCAN ERROR:", str(e))
+
+        return JSONResponse(content=[
+            {"name": "ERROR", "price": 0, "change": 0}
+        ])
