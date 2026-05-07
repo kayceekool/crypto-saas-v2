@@ -1,99 +1,77 @@
-import { useEffect, useState } from "react";
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import requests
+import time
 
-export default function Scanner() {
-  const [coins, setCoins] = useState([]);
-  const [status, setStatus] = useState("Loading scanner...");
+app = FastAPI()
 
-  useEffect(() => {
-    async function loadScanner() {
-      try {
-        const res = await fetch(
-          "https://crypto-saas-v2.onrender.com/scan"
-        );
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-        if (!res.ok) {
-          throw new Error("Backend not ready");
+cache = []
+last_update = 0
+
+
+@app.get("/scan")
+def scan():
+    global cache, last_update
+
+    # return cache if fresh
+    if cache and time.time() - last_update < 30:
+        return JSONResponse(content=cache)
+
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            "ids": "bitcoin,ethereum,binancecoin,solana,xrp,cardano,dogecoin,tron,polygon",
+            "vs_currencies": "usd",
+            "include_24hr_change": "true"
         }
 
-        const text = await res.text();
-        console.log("Scanner RAW:", text);
+        r = requests.get(url, params=params, timeout=10)
 
-        let data = JSON.parse(text);
+        print("CoinGecko status:", r.status_code)
+        print("CoinGecko response:", r.text)
 
-        if (Array.isArray(data)) {
-          setCoins(data);
-          setStatus("");
-        } else {
-          setStatus("Invalid scanner response");
-        }
+        data = r.json()
 
-      } catch (err) {
-        console.log(err);
-        setStatus("Connection error / backend waking up");
-      }
-    }
+        if not isinstance(data, dict):
+            return JSONResponse(content=cache if cache else [
+                {"name": "ERROR", "price": 0, "change": 0}
+            ])
 
-    loadScanner();
-  }, []);
+        result = []
 
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginTop: "20px",
-  };
+        for coin, info in data.items():
+            if isinstance(info, dict):
+                result.append({
+                    "name": coin.upper(),
+                    "price": info.get("usd", 0),
+                    "change": round(info.get("usd_24h_change", 0), 2)
+                })
 
-  const headStyle = {
-    background: "#000",
-    color: "#39ff14",
-    fontSize: "22px",
-  };
+        # IMPORTANT: never return fake STATUS object
+        if not result:
+            return JSONResponse(content=[
+                {"name": "NO DATA", "price": 0, "change": 0}
+            ])
 
-  const cellStyle = {
-    padding: "14px",
-    borderBottom: "1px solid #333",
-    textAlign: "center",
-    fontSize: "18px",
-  };
+        result = sorted(result, key=lambda x: abs(x["change"]), reverse=True)
 
-  return (
-    <div style={{ background: "#f4f4f4", minHeight: "100vh", padding: "20px" }}>
-      <h1>🚀 Crypto Scanner</h1>
+        cache = result
+        last_update = time.time()
 
-      {status && <p style={{ color: "red" }}>{status}</p>}
+        return JSONResponse(content=result)
 
-      {coins.length === 0 && <p>Waiting for data...</p>}
+    except Exception as e:
+        print("SCAN ERROR:", str(e))
 
-      {coins.length > 0 && (
-        <table style={tableStyle}>
-          <thead>
-            <tr>
-              <th style={headStyle}>Token</th>
-              <th style={headStyle}>Price ($)</th>
-              <th style={headStyle}>24h %</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {coins.map((coin, i) => (
-              <tr key={i}>
-                <td style={cellStyle}>{coin.name}</td>
-                <td style={cellStyle}>
-                  ${Number(coin.price).toLocaleString()}
-                </td>
-                <td
-                  style={{
-                    ...cellStyle,
-                    color: coin.change >= 0 ? "limegreen" : "red",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {coin.change}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
+        return JSONResponse(content=[
+            {"name": "ERROR", "price": 0, "change": 0}
+        ])
