@@ -1,20 +1,19 @@
-from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI()
-import time
-import requests
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import requests
+import time
 
+app = FastAPI()
+
+# ✅ CORS FIX
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all (for now)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app = FastAPI()
-
-# 🔒 cache (prevents API rate limit issues)
 scan_cache = []
 scan_last = 0
 
