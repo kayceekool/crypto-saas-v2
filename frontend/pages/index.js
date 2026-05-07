@@ -2,64 +2,79 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const [coins, setCoins] = useState([]);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchScan = () => {
-      fetch("https://crypto-saas-v2.onrender.com/scan")
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setCoins(data);
-            setError(null);
-          } else {
-            setError("Scan failed");
-          }
-        })
-        .catch(() => setError("Connection error"));
-    };
-
-    fetchScan();
-    const interval = setInterval(fetchScan, 10000);
-
-    return () => clearInterval(interval);
+    fetch("https://crypto-saas-v2.onrender.com/scan")
+      .then((res) => res.json())
+      .then((data) => {
+        setCoins(data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }, []);
 
+  const page = {
+    background: "#111",
+    minHeight: "100vh",
+    padding: "20px",
+    color: "white",
+    fontFamily: "Arial",
+  };
+
+  const table = {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "20px",
+  };
+
+  const th = {
+    background: "#00ff99",
+    color: "black",
+    padding: "12px",
+    fontSize: "18px",
+  };
+
+  const td = {
+    padding: "10px",
+    borderBottom: "1px solid #333",
+    textAlign: "center",
+  };
+
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+    <div style={page}>
       <h1>🚀 Crypto Scanner</h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <table style={{ width: "100%", marginTop: "20px", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ background: "#111", color: "#0f0" }}>
-            <th style={cell}>Token</th>
-            <th style={cell}>Price ($)</th>
-            <th style={cell}>24h %</th>
-          </tr>
-        </thead>
-        <tbody>
-          {coins && coins.length > 0 ? coins.map((coin, i) => (
-{coins.length === 0 && <p>Loading scanner data...</p>}
-            <tr key={i} style={{ textAlign: "center" }}>
-              <td style={cell}>{coin.name}</td>
-              <td style={cell}>${coin.price}</td>
-              <td style={{
-                ...cell,
-                color: coin.change > 0 ? "lime" : "red"
-              }}>
-                {coin.change}%
-              </td>
+      {coins.length === 0 ? (
+        <p>Loading scanner data...</p>
+      ) : (
+        <table style={table}>
+          <thead>
+            <tr>
+              <th style={th}>Token</th>
+              <th style={th}>Price ($)</th>
+              <th style={th}>24h %</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {coins.map((coin, i) => (
+              <tr key={i}>
+                <td style={td}>{coin.name}</td>
+                <td style={td}>${coin.price}</td>
+                <td
+                  style={{
+                    ...td,
+                    color: coin.change > 0 ? "#00ff99" : "red",
+                  }}
+                >
+                  {coin.change}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
-
-const cell = {
-  padding: "10px",
-  borderBottom: "1px solid #333"
-};
