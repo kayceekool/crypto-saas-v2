@@ -5,46 +5,46 @@ export default function Home() {
   const [status, setStatus] = useState("Loading scanner data...");
 
   useEffect(() => {
-  async function loadScanner() {
-    try {
-      setStatus("Connecting to backend...");
+    async function loadScanner() {
+      try {
+        setStatus("Connecting to backend...");
 
-      const response = await fetch(
-        "https://crypto-saas-v2.onrender.com/scan",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+        const response = await fetch(
+          "https://crypto-saas-v2.onrender.com/scan",
+          {
+            method: "GET",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Backend error: ${response.status}`);
         }
-      );
 
-      if (!response.ok) {
-        throw new Error("Backend not ready");
+        const text = await response.text();
+        console.log("RAW RESPONSE:", text);
+
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error("Invalid JSON from backend");
+        }
+
+        if (Array.isArray(data)) {
+          setCoins(data);
+          setStatus("");
+        } else {
+          setStatus("No scanner data received");
+        }
+
+      } catch (error) {
+        console.log(error);
+        setStatus("Backend waking up... refresh in 20–30 seconds");
       }
-
-      const data = await response.json();
-
-      console.log(data);
-
-      if (Array.isArray(data)) {
-        setCoins(data);
-        setStatus("");
-      } else {
-        setStatus("No scanner data");
-      }
-
-    } catch (error) {
-      console.log(error);
-
-      setStatus(
-        "Backend waking up... refresh in 30 seconds"
-      );
     }
-  }
 
-  loadScanner();
-}, []);
+    loadScanner();
+  }, []);
 
   const page = {
     background: "#111",
@@ -77,11 +77,7 @@ export default function Home() {
     <div style={page}>
       <h1>🚀 Crypto Scanner</h1>
 
-      {status && (
-        <p style={{ color: "orange" }}>
-          {status}
-        </p>
-      )}
+      {status && <p style={{ color: "orange" }}>{status}</p>}
 
       {coins.length > 0 && (
         <table style={table}>
@@ -97,18 +93,11 @@ export default function Home() {
             {coins.map((coin, i) => (
               <tr key={i}>
                 <td style={td}>{coin.name}</td>
-
-                <td style={td}>
-                  ${coin.price}
-                </td>
-
+                <td style={td}>${coin.price}</td>
                 <td
                   style={{
                     ...td,
-                    color:
-                      coin.change >= 0
-                        ? "#00ff99"
-                        : "red"
+                    color: coin.change >= 0 ? "#00ff99" : "red"
                   }}
                 >
                   {coin.change}%
