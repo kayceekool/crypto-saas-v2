@@ -1,77 +1,95 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import requests
-import time
+import { useEffect, useState } from "react";
 
-app = FastAPI()
+export default function Scanner() {
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+  const [coins, setCoins] = useState([]);
+  const [status, setStatus] = useState("Loading sniper scanner...");
 
-cache = []
-last_update = 0
+  async function loadScanner() {
 
+    try {
 
-@app.get("/scan")
-def scan():
-    global cache, last_update
+      const res = await fetch(
+        "https://crypto-saas-v2.onrender.com/scan"
+      );
 
-    # return cache if fresh
-    if cache and time.time() - last_update < 30:
-        return JSONResponse(content=cache)
+      const data = await res.json();
 
-    try:
-        url = "https://api.coingecko.com/api/v3/simple/price"
-        params = {
-            "ids": "bitcoin,ethereum,binancecoin,solana,xrp,cardano,dogecoin,tron,polygon",
-            "vs_currencies": "usd",
-            "include_24hr_change": "true"
-        }
+      if (Array.isArray(data)) {
 
-        r = requests.get(url, params=params, timeout=10)
+        setCoins(data);
 
-        print("CoinGecko status:", r.status_code)
-        print("CoinGecko response:", r.text)
+        setStatus(`🔥 Live Sniper Scanner • ${data.length} tokens`);
 
-        data = r.json()
+      } else {
 
-        if not isinstance(data, dict):
-            return JSONResponse(content=cache if cache else [
-                {"name": "ERROR", "price": 0, "change": 0}
-            ])
+        setStatus("Invalid backend response");
 
-        result = []
+      }
 
-        for coin, info in data.items():
-            if isinstance(info, dict):
-                result.append({
-                    "name": coin.upper(),
-                    "price": info.get("usd", 0),
-                    "change": round(info.get("usd_24h_change", 0), 2)
-                })
+    } catch (err) {
 
-        # IMPORTANT: never return fake STATUS object
-        if not result:
-            return JSONResponse(content=[
-                {"name": "NO DATA", "price": 0, "change": 0}
-            ])
+      console.log(err);
 
-        result = sorted(result, key=lambda x: abs(x["change"]), reverse=True)
+      setStatus("Backend connection failed");
 
-        cache = result
-        last_update = time.time()
+    }
+  }
 
-        return JSONResponse(content=result)
+  useEffect(() => {
 
-    except Exception as e:
-        print("SCAN ERROR:", str(e))
+    loadScanner();
 
-        return JSONResponse(content=[
-            {"name": "ERROR", "price": 0, "change": 0}
-        ])
+    const interval = setInterval(loadScanner, 15000);
+
+    return () => clearInterval(interval);
+
+  }, []);
+
+  return (
+
+    <div style={{ padding: 20, background: "#050505", color: "#fff", minHeight: "100vh" }}>
+
+      <h1>🚀 SNIPER TEST VERSION</h1>
+
+      <p style={{ color: "#00ffaa" }}>{status}</p>
+
+      <table style={{ width: "100%", marginTop: 20 }}>
+
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Price</th>
+            <th>24h %</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {coins.map((coin, i) => (
+
+            <tr key={i}>
+
+              <td>{coin.name}</td>
+
+              <td>
+                {coin.price > 0
+                  ? `$${Number(coin.price).toLocaleString()}`
+                  : "NEW"}
+              </td>
+
+              <td style={{ color: coin.change >= 0 ? "#00ff99" : "red" }}>
+                {coin.change}%
+              </td>
+
+            </tr>
+
+          ))}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  );
+}
