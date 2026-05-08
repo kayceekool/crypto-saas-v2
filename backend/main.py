@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import requests
 import time
-import re
 
 app = FastAPI()
 
@@ -22,103 +21,113 @@ last_update = 0
 
 @app.get("/")
 def home():
-    return {"message": "Professional Solana scanner running"}
+    return {"message": "Top Solana scanner running"}
 
 
 @app.get("/scan")
 def scan():
     global cache, last_update
 
-    # ⏱️ Cache
+    # ⏱️ cache
     if cache and (time.time() - last_update < 20):
         return JSONResponse(content=cache)
 
     try:
 
-        url = "https://api.dexscreener.com/latest/dex/search/?q=SOL"
-
-        response = requests.get(
-            url,
-            timeout=15,
-            headers={
-                "User-Agent": "Mozilla/5.0"
-            }
-        )
-
-        if response.status_code != 200:
-            return JSONResponse(content=[])
-
-        data = response.json()
-
-        pairs = data.get("pairs", [])
+        # 🔥 Popular Solana ecosystem tokens
+        searches = [
+            "BONK",
+            "WIF",
+            "JUP",
+            "PYTH",
+            "RAY",
+            "ORCA",
+            "BOME",
+            "POPCAT",
+            "SAMO",
+            "JTO",
+            "NOS",
+            "MEW",
+            "SLERF",
+            "PONKE",
+            "MOTHER",
+            "GOAT",
+            "FWOG",
+            "TRUMP",
+            "MELANIA"
+        ]
 
         result = []
         added = set()
 
-        for pair in pairs:
+        for token in searches:
 
-            try:
-                symbol = pair["baseToken"]["symbol"]
+            url = f"https://api.dexscreener.com/latest/dex/search/?q={token}"
 
-                # 🚨 Remove strange symbols
-                if not re.match(r"^[A-Za-z0-9]{2,10}$", symbol):
-                    continue
+            response = requests.get(
+                url,
+                timeout=15,
+                headers={
+                    "User-Agent": "Mozilla/5.0"
+                }
+            )
 
-                price = float(pair.get("priceUsd", 0))
-
-                change = float(
-                    pair.get("priceChange", {}).get("h24", 0)
-                )
-
-                liquidity = float(
-                    pair.get("liquidity", {}).get("usd", 0)
-                )
-
-                volume = float(
-                    pair.get("volume", {}).get("h24", 0)
-                )
-
-                fdv = float(
-                    pair.get("fdv", 0)
-                )
-
-                # 🚨 Skip junk pools
-                if liquidity < 100000:
-                    continue
-
-                if volume < 50000:
-                    continue
-
-                if price <= 0:
-                    continue
-
-                if fdv < 100000:
-                    continue
-
-                # 🚨 Skip duplicates
-                if symbol in added:
-                    continue
-
-                added.add(symbol)
-
-                result.append({
-                    "name": symbol,
-                    "price": round(price, 6),
-                    "change": round(change, 2)
-                })
-
-            except:
+            if response.status_code != 200:
                 continue
 
-        # 🔥 Sort biggest movers first
+            data = response.json()
+
+            pairs = data.get("pairs", [])
+
+            for pair in pairs:
+
+                try:
+
+                    chain = pair.get("chainId", "")
+
+                    # ✅ ONLY SOLANA
+                    if chain.lower() != "solana":
+                        continue
+
+                    symbol = pair["baseToken"]["symbol"]
+
+                    if symbol in added:
+                        continue
+
+                    price = float(pair.get("priceUsd", 0))
+
+                    change = float(
+                        pair.get("priceChange", {}).get("h24", 0)
+                    )
+
+                    liquidity = float(
+                        pair.get("liquidity", {}).get("usd", 0)
+                    )
+
+                    # 🚨 skip dead pools
+                    if liquidity < 10000:
+                        continue
+
+                    added.add(symbol)
+
+                    result.append({
+                        "name": symbol,
+                        "price": round(price, 6),
+                        "change": round(change, 2)
+                    })
+
+                    # ✅ take best pair only
+                    break
+
+                except:
+                    continue
+
+        # 🔥 sort biggest movers
         result = sorted(
             result,
             key=lambda x: abs(x["change"]),
             reverse=True
         )
-
-        # 🔥 Keep top 50
-        result = result[:50]
 
         cache = result
         last_update = time.time()
