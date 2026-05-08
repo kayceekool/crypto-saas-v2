@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import requests
 import time
+import re
 
 app = FastAPI()
 
@@ -21,20 +22,20 @@ last_update = 0
 
 @app.get("/")
 def home():
-    return {"message": "Solana scanner backend running"}
+    return {"message": "Professional Solana scanner running"}
 
 
 @app.get("/scan")
 def scan():
     global cache, last_update
 
-    # ⏱️ Cache for 20 seconds
+    # ⏱️ Cache
     if cache and (time.time() - last_update < 20):
         return JSONResponse(content=cache)
 
     try:
-        # 🔥 DexScreener Solana pairs endpoint
-        url = "https://api.dexscreener.com/latest/dex/pairs/solana"
+
+        url = "https://api.dexscreener.com/latest/dex/search/?q=SOL"
 
         response = requests.get(
             url,
@@ -43,8 +44,6 @@ def scan():
                 "User-Agent": "Mozilla/5.0"
             }
         )
-
-        print("STATUS:", response.status_code)
 
         if response.status_code != 200:
             return JSONResponse(content=[])
@@ -61,6 +60,10 @@ def scan():
             try:
                 symbol = pair["baseToken"]["symbol"]
 
+                # 🚨 Remove strange symbols
+                if not re.match(r"^[A-Za-z0-9]{2,10}$", symbol):
+                    continue
+
                 price = float(pair.get("priceUsd", 0))
 
                 change = float(
@@ -75,11 +78,21 @@ def scan():
                     pair.get("volume", {}).get("h24", 0)
                 )
 
-                # 🚨 Skip junk
-                if liquidity < 50000:
+                fdv = float(
+                    pair.get("fdv", 0)
+                )
+
+                # 🚨 Skip junk pools
+                if liquidity < 100000:
                     continue
 
-                if volume < 10000:
+                if volume < 50000:
+                    continue
+
+                if price <= 0:
+                    continue
+
+                if fdv < 100000:
                     continue
 
                 # 🚨 Skip duplicates
@@ -104,7 +117,7 @@ def scan():
             reverse=True
         )
 
-        # 🔥 Limit top 50
+        # 🔥 Keep top 50
         result = result[:50]
 
         cache = result
