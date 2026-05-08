@@ -135,6 +135,10 @@ export default function Home() {
 
   };
 
+  // =====================================
+  // UI
+  // =====================================
+
   return (
 
     <div style={styles.page}>
@@ -161,6 +165,8 @@ export default function Home() {
             <th style={styles.th}>Volume</th>
             <th style={styles.th}>Score</th>
             <th style={styles.th}>Rating</th>
+            <th style={styles.th}>Risk</th>
+            <th style={styles.th}>Signal</th>
 
           </tr>
 
@@ -178,7 +184,11 @@ export default function Home() {
 
                 background:
 
-                  coin.score >= 140
+                  coin.signal === "STRONG BUY"
+
+                    ? "#330000"
+
+                    : coin.score >= 140
 
                     ? "#2a0000"
 
@@ -190,7 +200,11 @@ export default function Home() {
 
                 boxShadow:
 
-                  coin.score >= 140
+                  coin.signal === "STRONG BUY"
+
+                    ? "0 0 25px #ff0000"
+
+                    : coin.score >= 140
 
                     ? "0 0 20px #ff0000"
 
@@ -402,6 +416,78 @@ export default function Home() {
                 >
 
                   {coin.rating}
+
+                </span>
+
+              </td>
+
+              {/* RISK */}
+
+              <td style={styles.td}>
+
+                <span
+
+                  style={{
+
+                    background:
+
+                      coin.risk === "LOW"
+
+                        ? "#008844"
+
+                        : coin.risk === "MEDIUM"
+
+                        ? "#aa8800"
+
+                        : "#aa0000",
+
+                    padding: "6px 12px",
+
+                    borderRadius: "10px",
+
+                    fontWeight: "bold",
+
+                    color: "white"
+                  }}
+                >
+
+                  {coin.risk}
+
+                </span>
+
+              </td>
+
+              {/* SIGNAL */}
+
+              <td style={styles.td}>
+
+                <span
+
+                  style={{
+
+                    background:
+
+                      coin.signal === "STRONG BUY"
+
+                        ? "#ff0000"
+
+                        : coin.signal === "BUY"
+
+                        ? "#00aa66"
+
+                        : "#444",
+
+                    padding: "6px 12px",
+
+                    borderRadius: "10px",
+
+                    fontWeight: "bold",
+
+                    color: "white"
+                  }}
+                >
+
+                  {coin.signal}
 
                 </span>
 
