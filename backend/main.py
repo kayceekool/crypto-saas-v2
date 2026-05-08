@@ -46,19 +46,11 @@ def scan():
 
     global cache, last_update
 
-    # =====================================
-    # CACHE
-    # =====================================
-
     if cache and (time.time() - last_update < 15):
 
         return JSONResponse(content=cache)
 
     try:
-
-        # =================================
-        # 🔥 DISCOVERY SEARCHES
-        # =================================
 
         searches = [
 
@@ -77,14 +69,11 @@ def scan():
             "alpha",
             "100x",
             "microcap"
+
         ]
 
         result = []
         added = set()
-
-        # =================================
-        # SEARCH LOOP
-        # =================================
 
         for token in searches:
 
@@ -109,10 +98,6 @@ def scan():
 
                 pairs = data.get("pairs", [])
 
-                # =================================
-                # PAIRS LOOP
-                # =================================
-
                 for pair in pairs:
 
                     try:
@@ -125,13 +110,8 @@ def scan():
                             .lower()
                         )
 
-                        # ONLY SOLANA
                         if chain != "solana":
                             continue
-
-                        # =================================
-                        # TOKEN SYMBOL
-                        # =================================
 
                         symbol = (
                             pair["baseToken"]["symbol"]
@@ -139,16 +119,8 @@ def scan():
                             .upper()
                         )
 
-                        # =================================
-                        # DUPLICATE FILTER
-                        # =================================
-
                         if symbol in added:
                             continue
-
-                        # =================================
-                        # BAD SYMBOL FILTERS
-                        # =================================
 
                         if (
                             len(symbol) > 15
@@ -181,10 +153,6 @@ def scan():
                             for bad in bad_words
                         ):
                             continue
-
-                        # =================================
-                        # METRICS
-                        # =================================
 
                         price = float(
                             pair.get(
@@ -235,10 +203,6 @@ def scan():
                             )
                         )
 
-                        # =================================
-                        # MINIMUM FILTERS
-                        # =================================
-
                         if liquidity < 10000:
                             continue
 
@@ -246,14 +210,10 @@ def scan():
                             continue
 
                         # =================================
-                        # 🔥 SNIPER SCORE ENGINE
+                        # SCORE ENGINE
                         # =================================
 
                         score = 0
-
-                        # =============================
-                        # LIQUIDITY
-                        # =============================
 
                         if liquidity > 25000:
                             score += 10
@@ -267,10 +227,6 @@ def scan():
                         if liquidity > 500000:
                             score += 20
 
-                        # =============================
-                        # VOLUME
-                        # =============================
-
                         if volume > 10000:
                             score += 10
 
@@ -280,16 +236,8 @@ def scan():
                         if volume > 100000:
                             score += 20
 
-                        # =============================
-                        # VOLUME EXPLOSION
-                        # =============================
-
                         if volume > liquidity * 2:
                             score += 30
-
-                        # =============================
-                        # MOMENTUM / PUMP SCORE
-                        # =============================
 
                         if change > 3:
                             score += 10
@@ -303,10 +251,6 @@ def scan():
                         if change > 50:
                             score += 50
 
-                        # =============================
-                        # FDV
-                        # =============================
-
                         if fdv > 500000:
                             score += 10
 
@@ -314,7 +258,7 @@ def scan():
                             score += 10
 
                         # =================================
-                        # RATING ENGINE
+                        # RATING
                         # =================================
 
                         if score >= 140:
@@ -333,7 +277,7 @@ def scan():
                             rating = "⚠️ RISKY"
 
                         # =================================
-                        # NEW TOKEN DETECTION
+                        # TOKEN TYPE
                         # =================================
 
                         token_type = (
@@ -345,6 +289,37 @@ def scan():
 
                             else "TRENDING"
                         )
+
+                        # =================================
+                        # RISK ENGINE
+                        # =================================
+
+                        risk = "LOW"
+
+                        if liquidity < 30000:
+                            risk = "HIGH"
+
+                        elif liquidity < 75000:
+                            risk = "MEDIUM"
+
+                        # =================================
+                        # BUY SIGNAL ENGINE
+                        # =================================
+
+                        buy_signal = "NO"
+
+                        if (
+                            score >= 140
+                            and change > 15
+                            and volume > liquidity
+                        ):
+                            buy_signal = "STRONG BUY"
+
+                        elif (
+                            score >= 100
+                            and change > 5
+                        ):
+                            buy_signal = "BUY"
 
                         # =================================
                         # SAVE TOKEN
@@ -382,6 +357,10 @@ def scan():
 
                             "type": token_type,
 
+                            "risk": risk,
+
+                            "signal": buy_signal,
+
                             "url": pair_url
                         })
 
@@ -390,10 +369,6 @@ def scan():
 
             except:
                 continue
-
-        # =================================
-        # SORT RESULTS
-        # =================================
 
         result = sorted(
             result,
@@ -404,15 +379,7 @@ def scan():
             reverse=True
         )
 
-        # =================================
-        # LIMIT TOKENS
-        # =================================
-
         result = result[:40]
-
-        # =================================
-        # UPDATE CACHE
-        # =================================
 
         cache = result
         last_update = time.time()
