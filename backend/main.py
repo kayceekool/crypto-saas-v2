@@ -1,160 +1,199 @@
-import { useEffect, useState } from "react";
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import requests
+import time
 
-export default function Home() {
+app = FastAPI()
 
-  const [coins, setCoins] = useState([]);
-  const [status, setStatus] = useState("Loading scanner...");
+# ✅ Allow frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-  async function loadScanner() {
+cache = []
+last_update = 0
 
-    try {
 
-      setStatus("Updating market data...");
-
-      const response = await fetch(
-        "https://crypto-saas-v2.onrender.com/scan"
-      );
-
-      const data = await response.json();
-
-      console.log("Scanner data:", data);
-
-      if (Array.isArray(data)) {
-
-        setCoins(data);
-
-        setStatus(
-          "Live market data • Auto-refresh every 15s"
-        );
-
-      } else {
-
-        setStatus("Invalid scanner response");
-
-      }
-
-    } catch (err) {
-
-      console.log(err);
-
-      setStatus("Backend connection failed");
-
+@app.get("/")
+def home():
+    return {
+        "message": "Solana sniper scanner running"
     }
-  }
 
-  useEffect(() => {
 
-    // 🔥 first load
-    loadScanner();
+@app.get("/scan")
+def scan():
 
-    // 🔥 auto refresh every 15 seconds
-    const interval = setInterval(() => {
-      loadScanner();
-    }, 15000);
+    global cache, last_update
 
-    // cleanup
-    return () => clearInterval(interval);
+    # ⏱️ cache
+    if cache and (time.time() - last_update < 15):
+        return JSONResponse(content=cache)
 
-  }, []);
+    try:
 
-  const page = {
-    background: "#050505",
-    minHeight: "100vh",
-    color: "white",
-    padding: "20px",
-    fontFamily: "Arial"
-  };
+        # 🔥 Trending searches
+        searches = [
+            "BONK",
+            "WIF",
+            "JUP",
+            "PYTH",
+            "RAY",
+            "ORCA",
+            "BOME",
+            "POPCAT",
+            "SAMO",
+            "JTO"
+        ]
 
-  const table = {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginTop: "20px"
-  };
+        result = []
+        added = set()
 
-  const th = {
-    background: "#00ffaa",
-    color: "#000",
-    padding: "16px",
-    fontSize: "22px"
-  };
+        # ==================================
+        # 🔥 TRENDING TOKENS
+        # ==================================
 
-  const td = {
-    padding: "18px",
-    borderBottom: "1px solid #222",
-    textAlign: "center",
-    fontSize: "20px"
-  };
+        for token in searches:
 
-  return (
+            url = f"https://api.dexscreener.com/latest/dex/search/?q={token}"
 
-    <div style={page}>
+            response = requests.get(
+                url,
+                timeout=15,
+                headers={
+                    "User-Agent": "Mozilla/5.0"
+                }
+            )
 
-      <h1
-        style={{
-          fontSize: "60px",
-          marginBottom: "10px"
-        }}
-      >
-        🚀 Crypto Scanner
-      </h1>
+            if response.status_code != 200:
+                continue
 
-      <p
-        style={{
-          color: "#00ffaa",
-          fontSize: "18px"
-        }}
-      >
-        {status}
-      </p>
+            data = response.json()
 
-      <table style={table}>
+            pairs = data.get("pairs", [])
 
-        <thead>
-          <tr>
-            <th style={th}>Token</th>
-            <th style={th}>Price ($)</th>
-            <th style={th}>24h %</th>
-          </tr>
-        </thead>
+            for pair in pairs:
 
-        <tbody>
+                try:
 
-          {coins.map((coin, i) => (
+                    chain = pair.get("chainId", "")
 
-            <tr key={i}>
+                    if chain.lower() != "solana":
+                        continue
 
-              <td style={td}>
-                {coin.name}
-              </td>
+                    symbol = pair["baseToken"]["symbol"]
 
-              <td style={td}>
-                $
-                {Number(
-                  coin.price
-                ).toLocaleString()}
-              </td>
+                    if symbol in added:
+                        continue
 
-              <td
-                style={{
-                  ...td,
-                  color:
-                    coin.change >= 0
-                      ? "#00ff99"
-                      : "red",
-                  fontWeight: "bold"
-                }}
-              >
-                {coin.change}%
-              </td>
+                    liquidity = float(
+                        pair.get("liquidity", {}).get("usd", 0)
+                    )
 
-            </tr>
+                    if liquidity < 10000:
+                        continue
 
-          ))}
+                    added.add(symbol)
 
-        </tbody>
+                    result.append({
+                        "name": symbol,
+                        "price": round(
+                            float(pair.get("priceUsd", 0)),
+                            6
+                        ),
+                        "change": round(
+                            float(
+                                pair.get(
+                                    "priceChange",
+                                    {}
+                                ).get("h24", 0)
+                            ),
+                            2
+                        ),
+                        "type": "TRENDING"
+                    })
 
-      </table>
+                    break
 
-    </div>
-  );
-}
+                except:
+                    continue
+
+        # ==================================
+        # 🚀 NEW PAIR DETECTOR
+        # ==================================
+
+        new_pair_url = (
+            "https://api.dexscreener.com/token-profiles/latest/v1"
+        )
+
+        response = requests.get(
+            new_pair_url,
+            timeout=15,
+            headers={
+                "User-Agent": "Mozilla/5.0"
+            }
+        )
+
+        if response.status_code == 200:
+
+            data = response.json()
+
+            for token in data[:25]:
+
+                try:
+
+                    chain = token.get("chainId", "")
+
+                    if chain.lower() != "solana":
+                        continue
+
+                    symbol = token.get("tokenSymbol", "")
+
+                    if not symbol:
+                        continue
+
+                    if symbol in added:
+                        continue
+
+                    added.add(symbol)
+
+                    result.append({
+                        "name": symbol,
+                        "price": 0,
+                        "change": 0,
+                        "type": "NEW"
+                    })
+
+                except:
+                    continue
+
+        # 🔥 Sort:
+        # NEW pairs first
+        # then biggest movers
+
+        result = sorted(
+            result,
+            key=lambda x: (
+                x["type"] != "NEW",
+                -abs(x["change"])
+            )
+        )
+
+        # 💾 cache
+        cache = result
+        last_update = time.time()
+
+        return JSONResponse(content=result)
+
+    except Exception as e:
+
+        print("SCAN ERROR:", str(e))
+
+        return JSONResponse(
+            content=cache if cache else []
+        )
