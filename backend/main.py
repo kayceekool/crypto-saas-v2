@@ -15,26 +15,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 💾 Cache
 cache = []
 last_update = 0
 
 
 @app.get("/")
 def home():
-    return {"message": "Crypto scanner backend running"}
+    return {"message": "Dex scanner backend running"}
 
 
 @app.get("/scan")
 def scan():
     global cache, last_update
 
-    # ⏱️ Cache for 20 seconds
+    # ⏱️ cache for 20 seconds
     if cache and (time.time() - last_update < 20):
         return JSONResponse(content=cache)
 
     try:
-        url = "https://api.coincap.io/v2/assets"
+        url = "https://api.dexscreener.com/latest/dex/search/?q=SOL"
 
         response = requests.get(
             url,
@@ -45,39 +44,39 @@ def scan():
         )
 
         print("STATUS:", response.status_code)
-        print("TEXT:", response.text[:300])
 
         if response.status_code != 200:
             return JSONResponse(content=[])
 
         data = response.json()
 
-        assets = data.get("data", [])
+        pairs = data.get("pairs", [])
 
         result = []
 
-        for coin in assets[:15]:
+        for pair in pairs[:15]:
             try:
                 result.append({
-                    "name": coin.get("symbol", "UNKNOWN"),
-                    "price": round(float(coin.get("priceUsd", 0)), 4),
-                    "change": round(float(coin.get("changePercent24Hr", 0)), 2)
+                    "name": pair["baseToken"]["symbol"],
+                    "price": round(float(pair.get("priceUsd", 0)), 6),
+                    "change": round(
+                        float(pair.get("priceChange", {}).get("h24", 0)),
+                        2
+                    )
                 })
             except:
                 continue
 
-        # 🚨 If no valid data
         if not result:
             return JSONResponse(content=[])
 
-        # 📊 Sort by biggest movers
+        # 🔥 biggest movers first
         result = sorted(
             result,
             key=lambda x: abs(x["change"]),
             reverse=True
         )
 
-        # 💾 Save cache
         cache = result
         last_update = time.time()
 
