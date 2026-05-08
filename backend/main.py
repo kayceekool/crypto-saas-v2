@@ -21,7 +21,7 @@ last_update = 0
 
 @app.get("/")
 def home():
-    return {"message": "Crypto scanner backend running"}
+    return {"message": "Solana scanner backend running"}
 
 
 @app.get("/scan")
@@ -33,70 +33,69 @@ def scan():
         return JSONResponse(content=cache)
 
     try:
-        # 🔥 Search top chains/tokens
-        searches = [
-            "SOL/USDC",
-            "BTC/USDT",
-            "ETH/USDT",
-            "BNB/USDT",
-            "XRP/USDT"
-        ]
+        # 🔥 DexScreener Solana pairs endpoint
+        url = "https://api.dexscreener.com/latest/dex/pairs/solana"
+
+        response = requests.get(
+            url,
+            timeout=15,
+            headers={
+                "User-Agent": "Mozilla/5.0"
+            }
+        )
+
+        print("STATUS:", response.status_code)
+
+        if response.status_code != 200:
+            return JSONResponse(content=[])
+
+        data = response.json()
+
+        pairs = data.get("pairs", [])
 
         result = []
         added = set()
 
-        for search in searches:
+        for pair in pairs:
 
-            url = f"https://api.dexscreener.com/latest/dex/search/?q={search}"
+            try:
+                symbol = pair["baseToken"]["symbol"]
 
-            response = requests.get(
-                url,
-                timeout=15,
-                headers={
-                    "User-Agent": "Mozilla/5.0"
-                }
-            )
+                price = float(pair.get("priceUsd", 0))
 
-            if response.status_code != 200:
-                continue
+                change = float(
+                    pair.get("priceChange", {}).get("h24", 0)
+                )
 
-            data = response.json()
+                liquidity = float(
+                    pair.get("liquidity", {}).get("usd", 0)
+                )
 
-            pairs = data.get("pairs", [])
+                volume = float(
+                    pair.get("volume", {}).get("h24", 0)
+                )
 
-            for pair in pairs:
-
-                try:
-                    symbol = pair["baseToken"]["symbol"]
-
-                    price = float(pair.get("priceUsd", 0))
-
-                    change = float(
-                        pair.get("priceChange", {}).get("h24", 0)
-                    )
-
-                    liquidity = float(
-                        pair.get("liquidity", {}).get("usd", 0)
-                    )
-
-                    # 🚨 Skip junk/scam pairs
-                    if liquidity < 10000:
-                        continue
-
-                    # 🚨 Skip duplicate symbols
-                    if symbol in added:
-                        continue
-
-                    added.add(symbol)
-
-                    result.append({
-                        "name": symbol,
-                        "price": round(price, 4),
-                        "change": round(change, 2)
-                    })
-
-                except:
+                # 🚨 Skip junk
+                if liquidity < 50000:
                     continue
+
+                if volume < 10000:
+                    continue
+
+                # 🚨 Skip duplicates
+                if symbol in added:
+                    continue
+
+                added.add(symbol)
+
+                result.append({
+                    "name": symbol,
+                    "price": round(price, 6),
+                    "change": round(change, 2)
+                })
+
+            except:
+                continue
 
         # 🔥 Sort biggest movers first
         result = sorted(
@@ -105,7 +104,9 @@ def scan():
             reverse=True
         )
 
-        # 💾 Save cache
+        # 🔥 Limit top 50
+        result = result[:50]
+
         cache = result
         last_update = time.time()
 
