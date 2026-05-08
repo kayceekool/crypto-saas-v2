@@ -1,53 +1,62 @@
 import { useEffect, useState } from "react";
 
 export default function Home() {
+
   const [coins, setCoins] = useState([]);
-  const [status, setStatus] = useState("Loading scanner data...");
+  const [status, setStatus] = useState(
+    "Loading sniper scanner..."
+  );
 
-  useEffect(() => {
-    async function loadScanner() {
-      try {
-        setStatus("Connecting to backend...");
+  async function loadScanner() {
 
-        const response = await fetch(
-          "https://crypto-saas-v2.onrender.com/scan",
-          {
-            method: "GET",
-          }
+    try {
+
+      const response = await fetch(
+        "https://crypto-saas-v2.onrender.com/scan"
+      );
+
+      const data = await response.json();
+
+      console.log(data);
+
+      if (Array.isArray(data)) {
+
+        setCoins(data);
+
+        setStatus(
+          `🔥 Live Solana Scanner • ${data.length} tokens`
         );
 
-        if (!response.ok) {
-          throw new Error(`Backend error: ${response.status}`);
-        }
+      } else {
 
-        const text = await response.text();
-        console.log("RAW RESPONSE:", text);
+        setStatus("Invalid backend response");
 
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          throw new Error("Invalid JSON from backend");
-        }
-
-        if (Array.isArray(data)) {
-          setCoins(data);
-          setStatus("");
-        } else {
-          setStatus("No scanner data received");
-        }
-
-      } catch (error) {
-        console.log(error);
-        setStatus("Backend waking up... refresh in 20–30 seconds");
       }
+
+    } catch (err) {
+
+      console.log(err);
+
+      setStatus("Backend connection failed");
+
     }
+  }
+
+  useEffect(() => {
 
     loadScanner();
+
+    // 🔥 auto refresh
+    const interval = setInterval(() => {
+      loadScanner();
+    }, 15000);
+
+    return () => clearInterval(interval);
+
   }, []);
 
   const page = {
-    background: "#111",
+    background: "#050505",
     minHeight: "100vh",
     color: "white",
     padding: "20px",
@@ -61,52 +70,137 @@ export default function Home() {
   };
 
   const th = {
-    background: "#00ff99",
+    background: "#00ffaa",
     color: "#000",
-    padding: "14px",
-    fontSize: "18px"
+    padding: "16px",
+    fontSize: "22px"
   };
 
   const td = {
-    padding: "12px",
-    borderBottom: "1px solid #333",
-    textAlign: "center"
+    padding: "18px",
+    borderBottom: "1px solid #222",
+    textAlign: "center",
+    fontSize: "18px"
   };
 
   return (
+
     <div style={page}>
-      <h1>🚀 Crypto Scanner</h1>
 
-      {status && <p style={{ color: "orange" }}>{status}</p>}
+      <h1
+        style={{
+          fontSize: "56px",
+          marginBottom: "10px"
+        }}
+      >
+        🚀 Crypto Scanner
+      </h1>
 
-      {coins.length > 0 && (
-        <table style={table}>
-          <thead>
-            <tr>
-              <th style={th}>Token</th>
-              <th style={th}>Price ($)</th>
-              <th style={th}>24h %</th>
+      <p
+        style={{
+          color: "#00ffaa",
+          fontSize: "18px"
+        }}
+      >
+        {status}
+      </p>
+
+      <table style={table}>
+
+        <thead>
+
+          <tr>
+            <th style={th}>Type</th>
+            <th style={th}>Token</th>
+            <th style={th}>Price ($)</th>
+            <th style={th}>24h %</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {coins.map((coin, i) => (
+
+            <tr key={i}>
+
+              {/* 🔥 TOKEN TYPE */}
+              <td style={td}>
+
+                {coin.type === "NEW" ? (
+
+                  <span
+                    style={{
+                      background: "#ff0080",
+                      padding: "6px 12px",
+                      borderRadius: "12px",
+                      fontWeight: "bold",
+                      color: "white"
+                    }}
+                  >
+                    NEW
+                  </span>
+
+                ) : (
+
+                  <span
+                    style={{
+                      background: "#00ffaa",
+                      padding: "6px 12px",
+                      borderRadius: "12px",
+                      fontWeight: "bold",
+                      color: "#000"
+                    }}
+                  >
+                    TRENDING
+                  </span>
+
+                )}
+
+              </td>
+
+              {/* TOKEN */}
+              <td style={td}>
+                {coin.name}
+              </td>
+
+              {/* PRICE */}
+              <td style={td}>
+
+                {coin.price > 0
+                  ? `$${Number(
+                      coin.price
+                    ).toLocaleString()}`
+                  : "NEW"}
+
+              </td>
+
+              {/* CHANGE */}
+              <td
+                style={{
+                  ...td,
+                  color:
+                    coin.change >= 0
+                      ? "#00ff99"
+                      : "red",
+                  fontWeight: "bold"
+                }}
+              >
+
+                {coin.type === "NEW"
+                  ? "JUST LAUNCHED 🚀"
+                  : `${coin.change}%`}
+
+              </td>
+
             </tr>
-          </thead>
 
-          <tbody>
-            {coins.map((coin, i) => (
-              <tr key={i}>
-                <td style={td}>{coin.name}</td>
-                <td style={td}>${coin.price}</td>
-                <td
-                  style={{
-                    ...td,
-                    color: coin.change >= 0 ? "#00ff99" : "red"
-                  }}
-                >
-                  {coin.change}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+
+        </tbody>
+
+      </table>
+
     </div>
   );
 }
