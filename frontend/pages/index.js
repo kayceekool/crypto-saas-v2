@@ -135,10 +135,6 @@ export default function Home() {
 
   };
 
-  // =====================================
-  // UI
-  // =====================================
-
   return (
 
     <div style={styles.page}>
@@ -158,19 +154,12 @@ export default function Home() {
           <tr>
 
             <th style={styles.th}>Type</th>
-
             <th style={styles.th}>Token</th>
-
             <th style={styles.th}>Price</th>
-
             <th style={styles.th}>24h %</th>
-
             <th style={styles.th}>Liquidity</th>
-
             <th style={styles.th}>Volume</th>
-
             <th style={styles.th}>Score</th>
-
             <th style={styles.th}>Rating</th>
 
           </tr>
@@ -209,9 +198,7 @@ export default function Home() {
               }}
             >
 
-              {/* ========================= */}
               {/* TYPE */}
-              {/* ========================= */}
 
               <td style={styles.td}>
 
@@ -259,35 +246,46 @@ export default function Home() {
 
               </td>
 
-              {/* ========================= */}
               {/* TOKEN */}
-              {/* ========================= */}
 
               <td style={styles.td}>
 
-                <strong>
+                <a
+
+                  href={coin.url}
+
+                  target="_blank"
+
+                  rel="noopener noreferrer"
+
+                  style={{
+                    color: "#00ffaa",
+                    textDecoration: "none",
+                    fontWeight: "bold"
+                  }}
+                >
+
                   {coin.name}
-                </strong>
+
+                </a>
 
               </td>
 
-              {/* ========================= */}
               {/* PRICE */}
-              {/* ========================= */}
 
               <td style={styles.td}>
 
-                $
+                {coin.price > 0.001
 
-                {Number(
-                  coin.price
-                ).toLocaleString()}
+                  ? `$${Number(
+                      coin.price
+                    ).toLocaleString()}`
+
+                  : `$${coin.price.toFixed(8)}`}
 
               </td>
 
-              {/* ========================= */}
               {/* CHANGE */}
-              {/* ========================= */}
 
               <td
 
@@ -311,9 +309,7 @@ export default function Home() {
 
               </td>
 
-              {/* ========================= */}
               {/* LIQUIDITY */}
-              {/* ========================= */}
 
               <td style={styles.td}>
 
@@ -325,9 +321,7 @@ export default function Home() {
 
               </td>
 
-              {/* ========================= */}
               {/* VOLUME */}
-              {/* ========================= */}
 
               <td style={styles.td}>
 
@@ -339,9 +333,7 @@ export default function Home() {
 
               </td>
 
-              {/* ========================= */}
               {/* SCORE */}
-              {/* ========================= */}
 
               <td
 
@@ -371,9 +363,7 @@ export default function Home() {
 
               </td>
 
-              {/* ========================= */}
               {/* RATING */}
-              {/* ========================= */}
 
               <td style={styles.td}>
 
