@@ -1,7 +1,22 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+import requests
+import time
+
+# =========================
+# 🚀 IMPORTS
+# =========================
+
+from sniper_engine import discover_new_pairs
+from exchanges.jupiter import get_jupiter_quote
 
 app = FastAPI()
+
+# =========================
+# 🌐 CORS
+# =========================
 
 app.add_middleware(
     CORSMiddleware,
@@ -11,20 +26,326 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# =========================
+# 🧠 CACHE
+# =========================
+
+scanner_cache = []
+sniper_cache = []
+
+last_update = 0
+
+# =========================
+# 🏦 ROOT
+# =========================
+
 @app.get("/")
 def home():
 
     return {
-        "status": "HEDGE_FUND_SAAS_RUNNING"
+        "status": "HEDGE_FUND_SAAS_RUNNING",
+        "scanner": "ACTIVE",
+        "sniper_engine": "ACTIVE",
+        "dex": "JUPITER_ENABLED"
     }
+
+# =========================
+# ⚡ MAIN SCANNER
+# =========================
 
 @app.get("/scan")
 def scan():
 
-    return [
-        {
-            "token": "BONK",
-            "score": 150,
-            "signal": "BUY"
-        }
-    ]
+    global scanner_cache
+    global sniper_cache
+    global last_update
+
+    # =========================
+    # ⚡ CACHE
+    # =========================
+
+    if (
+        scanner_cache
+        and time.time() - last_update < 15
+    ):
+
+        return JSONResponse(content={
+            "scanner": scanner_cache,
+            "new_pairs": sniper_cache
+        })
+
+    try:
+
+        keywords = [
+            "pump",
+            "ai",
+            "sol",
+            "meme",
+            "cat",
+            "dog",
+            "pepe",
+            "bonk",
+            "wojak"
+        ]
+
+        results = []
+        added = set()
+
+        # =========================
+        # 🔍 MAIN SCANNER LOOP
+        # =========================
+
+        for keyword in keywords:
+
+            try:
+
+                response = requests.get(
+                    f"https://api.dexscreener.com/latest/dex/search/?q={keyword}",
+                    timeout=15,
+                    headers={
+                        "User-Agent": "Mozilla/5.0"
+                    }
+                )
+
+                if response.status_code != 200:
+                    continue
+
+                data = response.json()
+
+                pairs = data.get("pairs", [])
+
+                for pair in pairs:
+
+                    try:
+
+                        chain = pair.get(
+                            "chainId",
+                            ""
+                        ).lower()
+
+                        if chain != "solana":
+                            continue
+
+                        symbol = pair["baseToken"]["symbol"]
+
+                        if symbol in added:
+                            continue
+
+                        price = float(
+                            pair.get("priceUsd", 0)
+                        )
+
+                        change = float(
+                            pair.get(
+                                "priceChange",
+                                {}
+                            ).get("h24", 0)
+                        )
+
+                        liquidity = float(
+                            pair.get(
+                                "liquidity",
+                                {}
+                            ).get("usd", 0)
+                        )
+
+                        volume = float(
+                            pair.get(
+                                "volume",
+                                {}
+                            ).get("h24", 0)
+                        )
+
+                        fdv = float(
+                            pair.get("fdv", 0)
+                        )
+
+                        pair_address = pair.get(
+                            "pairAddress",
+                            ""
+                        )
+
+                        dex_url = (
+                            f"https://dexscreener.com/solana/{pair_address}"
+                        )
+
+                        # =========================
+                        # 🚨 FILTERS
+                        # =========================
+
+                        if liquidity < 10000:
+                            continue
+
+                        # =========================
+                        # 🧠 AI SCORE
+                        # =========================
+
+                        score = 0
+
+                        # liquidity
+                        if liquidity > 50000:
+                            score += 30
+
+                        if liquidity > 100000:
+                            score += 30
+
+                        # volume
+                        if volume > 25000:
+                            score += 30
+
+                        if volume > 100000:
+                            score += 30
+
+                        # momentum
+                        if change > 5:
+                            score += 20
+
+                        if change > 15:
+                            score += 20
+
+                        # fdv
+                        if fdv > 1000000:
+                            score += 20
+
+                        # =========================
+                        # 🚨 RATING
+                        # =========================
+
+                        if score >= 180:
+                            rating = "🚨 EXTREME"
+
+                        elif score >= 120:
+                            rating = "🔥 HOT"
+
+                        elif score >= 80:
+                            rating = "🚀 GOOD"
+
+                        elif score >= 50:
+                            rating = "👀 WATCH"
+
+                        else:
+                            rating = "⚠️ RISKY"
+
+                        # =========================
+                        # 🛡️ RISK
+                        # =========================
+
+                        if liquidity > 100000:
+                            risk = "LOW"
+
+                        elif liquidity > 40000:
+                            risk = "MEDIUM"
+
+                        else:
+                            risk = "HIGH"
+
+                        # =========================
+                        # 📡 SIGNAL
+                        # =========================
+
+                        if score >= 180:
+                            signal = "STRONG BUY"
+
+                        elif score >= 120:
+                            signal = "BUY"
+
+                        else:
+                            signal = "NO"
+
+                        # =========================
+                        # ⚡ JUPITER CHECK
+                        # =========================
+
+                        jupiter = get_jupiter_quote()
+
+                        # =========================
+                        # 🔥 TOKEN TYPE
+                        # =========================
+
+                        token_type = (
+                            "NEW"
+                            if volume > liquidity
+                            else "TRENDING"
+                        )
+
+                        added.add(symbol)
+
+                        results.append({
+
+                            "type": token_type,
+
+                            "name": symbol.upper(),
+
+                            "price": round(price, 8),
+
+                            "change": round(change, 2),
+
+                            "liquidity": round(liquidity, 2),
+
+                            "volume": round(volume, 2),
+
+                            "score": score,
+
+                            "rating": rating,
+
+                            "risk": risk,
+
+                            "signal": signal,
+
+                            "url": dex_url,
+
+                            "jupiter": (
+                                "ONLINE"
+                                if "error" not in jupiter
+                                else "OFFLINE"
+                            )
+                        })
+
+                    except:
+                        continue
+
+            except:
+                continue
+
+        # =========================
+        # 🚀 SOL SNIPER ENGINE
+        # =========================
+
+        sniper_pairs = discover_new_pairs()
+
+        # =========================
+        # 📊 SORT
+        # =========================
+
+        results = sorted(
+            results,
+            key=lambda x: x["score"],
+            reverse=True
+        )
+
+        scanner_cache = results
+        sniper_cache = sniper_pairs
+
+        last_update = time.time()
+
+        return JSONResponse(content={
+
+            "scanner": results,
+
+            "new_pairs": sniper_pairs
+
+        })
+
+    except Exception as e:
+
+        print("SCAN ERROR:", str(e))
+
+        return JSONResponse(content={
+
+            "scanner": scanner_cache,
+
+            "new_pairs": sniper_cache,
+
+            "error": str(e)
+
+        })
