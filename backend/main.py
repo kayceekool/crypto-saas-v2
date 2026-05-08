@@ -1,140 +1,160 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import requests
-import time
+import { useEffect, useState } from "react";
 
-app = FastAPI()
+export default function Home() {
 
-# ✅ Allow frontend access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+  const [coins, setCoins] = useState([]);
+  const [status, setStatus] = useState("Loading scanner...");
 
-cache = []
-last_update = 0
+  async function loadScanner() {
 
+    try {
 
-@app.get("/")
-def home():
-    return {"message": "Top Solana scanner running"}
+      setStatus("Updating market data...");
 
+      const response = await fetch(
+        "https://crypto-saas-v2.onrender.com/scan"
+      );
 
-@app.get("/scan")
-def scan():
-    global cache, last_update
+      const data = await response.json();
 
-    # ⏱️ cache
-    if cache and (time.time() - last_update < 20):
-        return JSONResponse(content=cache)
+      console.log("Scanner data:", data);
 
-    try:
+      if (Array.isArray(data)) {
 
-        # 🔥 Popular Solana ecosystem tokens
-        searches = [
-            "BONK",
-            "WIF",
-            "JUP",
-            "PYTH",
-            "RAY",
-            "ORCA",
-            "BOME",
-            "POPCAT",
-            "SAMO",
-            "JTO",
-            "NOS",
-            "MEW",
-            "SLERF",
-            "PONKE",
-            "MOTHER",
-            "GOAT",
-            "FWOG",
-            "TRUMP",
-            "MELANIA"
-        ]
+        setCoins(data);
 
-        result = []
-        added = set()
+        setStatus(
+          "Live market data • Auto-refresh every 15s"
+        );
 
-        for token in searches:
+      } else {
 
-            url = f"https://api.dexscreener.com/latest/dex/search/?q={token}"
+        setStatus("Invalid scanner response");
 
-            response = requests.get(
-                url,
-                timeout=15,
-                headers={
-                    "User-Agent": "Mozilla/5.0"
-                }
-            )
+      }
 
-            if response.status_code != 200:
-                continue
+    } catch (err) {
 
-            data = response.json()
+      console.log(err);
 
-            pairs = data.get("pairs", [])
+      setStatus("Backend connection failed");
 
-            for pair in pairs:
+    }
+  }
 
-                try:
+  useEffect(() => {
 
-                    chain = pair.get("chainId", "")
+    // 🔥 first load
+    loadScanner();
 
-                    # ✅ ONLY SOLANA
-                    if chain.lower() != "solana":
-                        continue
+    // 🔥 auto refresh every 15 seconds
+    const interval = setInterval(() => {
+      loadScanner();
+    }, 15000);
 
-                    symbol = pair["baseToken"]["symbol"]
+    // cleanup
+    return () => clearInterval(interval);
 
-                    if symbol in added:
-                        continue
+  }, []);
 
-                    price = float(pair.get("priceUsd", 0))
+  const page = {
+    background: "#050505",
+    minHeight: "100vh",
+    color: "white",
+    padding: "20px",
+    fontFamily: "Arial"
+  };
 
-                    change = float(
-                        pair.get("priceChange", {}).get("h24", 0)
-                    )
+  const table = {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "20px"
+  };
 
-                    liquidity = float(
-                        pair.get("liquidity", {}).get("usd", 0)
-                    )
+  const th = {
+    background: "#00ffaa",
+    color: "#000",
+    padding: "16px",
+    fontSize: "22px"
+  };
 
-                    # 🚨 skip dead pools
-                    if liquidity < 10000:
-                        continue
+  const td = {
+    padding: "18px",
+    borderBottom: "1px solid #222",
+    textAlign: "center",
+    fontSize: "20px"
+  };
 
-                    added.add(symbol)
+  return (
 
-                    result.append({
-                        "name": symbol,
-                        "price": round(price, 6),
-                        "change": round(change, 2)
-                    })
+    <div style={page}>
 
-                    # ✅ take best pair only
-                    break
+      <h1
+        style={{
+          fontSize: "60px",
+          marginBottom: "10px"
+        }}
+      >
+        🚀 Crypto Scanner
+      </h1>
 
-                except:
-                    continue
+      <p
+        style={{
+          color: "#00ffaa",
+          fontSize: "18px"
+        }}
+      >
+        {status}
+      </p>
 
-        # 🔥 sort biggest movers
-        result = sorted(
-            result,
-            key=lambda x: abs(x["change"]),
-            reverse=True
-        )
+      <table style={table}>
 
-        cache = result
-        last_update = time.time()
+        <thead>
+          <tr>
+            <th style={th}>Token</th>
+            <th style={th}>Price ($)</th>
+            <th style={th}>24h %</th>
+          </tr>
+        </thead>
 
-        return JSONResponse(content=result)
+        <tbody>
 
-    except Exception as e:
-        print("SCAN ERROR:", str(e))
+          {coins.map((coin, i) => (
 
-        return JSONResponse(content=cache if cache else [])
+            <tr key={i}>
+
+              <td style={td}>
+                {coin.name}
+              </td>
+
+              <td style={td}>
+                $
+                {Number(
+                  coin.price
+                ).toLocaleString()}
+              </td>
+
+              <td
+                style={{
+                  ...td,
+                  color:
+                    coin.change >= 0
+                      ? "#00ff99"
+                      : "red",
+                  fontWeight: "bold"
+                }}
+              >
+                {coin.change}%
+              </td>
+
+            </tr>
+
+          ))}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  );
+}
