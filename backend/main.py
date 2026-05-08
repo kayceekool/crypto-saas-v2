@@ -65,19 +65,18 @@ def scan():
             "solana",
             "ai",
             "meme",
-            "dog",
-            "cat",
             "pepe",
             "swap",
-            "finance",
             "pump",
             "moon",
             "inu",
-            "token",
-            "dex",
             "launch",
             "new",
-            "coin"
+            "gem",
+            "sniper",
+            "alpha",
+            "100x",
+            "microcap"
         ]
 
         result = []
@@ -166,7 +165,14 @@ def scan():
                             "NET",
                             "TEST",
                             "SCAM",
-                            "INUINU"
+                            "INUINU",
+                            "TOKEN",
+                            "COIN",
+                            "FINANCE",
+                            "DOG",
+                            "CAT",
+                            "SOL",
+                            "ETH"
 
                         ]
 
@@ -185,6 +191,11 @@ def scan():
                                 "priceUsd",
                                 0
                             )
+                        )
+
+                        pair_url = pair.get(
+                            "url",
+                            ""
                         )
 
                         change = float(
@@ -347,7 +358,7 @@ def scan():
 
                             "price": round(
                                 price,
-                                6
+                                8
                             ),
 
                             "change": round(
@@ -369,7 +380,9 @@ def scan():
 
                             "rating": rating,
 
-                            "type": token_type
+                            "type": token_type,
+
+                            "url": pair_url
                         })
 
                     except:
