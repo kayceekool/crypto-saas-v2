@@ -93,7 +93,7 @@ export default function Home() {
           marginBottom: "10px"
         }}
       >
-        🚀 SNIPER TEST VERSION
+        🚀 CRYPTO SCANNER
       </h1>
 
       <p
