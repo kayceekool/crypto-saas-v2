@@ -6,7 +6,7 @@ import time
 
 app = FastAPI()
 
-# ✅ Allow frontend access
+# ✅ CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,7 +22,7 @@ last_update = 0
 @app.get("/")
 def home():
     return {
-        "message": "Solana sniper scanner running"
+        "message": "Solana sniper engine running"
     }
 
 
@@ -37,7 +37,6 @@ def scan():
 
     try:
 
-        # 🔥 Trending searches
         searches = [
             "BONK",
             "WIF",
@@ -48,19 +47,18 @@ def scan():
             "BOME",
             "POPCAT",
             "SAMO",
-            "JTO"
+            "JTO",
+            "KMNO"
         ]
 
         result = []
         added = set()
 
-        # ==================================
-        # 🔥 TRENDING TOKENS
-        # ==================================
-
         for token in searches:
 
-            url = f"https://api.dexscreener.com/latest/dex/search/?q={token}"
+            url = (
+                f"https://api.dexscreener.com/latest/dex/search/?q={token}"
+            )
 
             response = requests.get(
                 url,
@@ -91,31 +89,82 @@ def scan():
                     if symbol in added:
                         continue
 
+                    price = float(pair.get("priceUsd", 0))
+
+                    change = float(
+                        pair.get("priceChange", {}).get("h24", 0)
+                    )
+
                     liquidity = float(
                         pair.get("liquidity", {}).get("usd", 0)
                     )
 
+                    volume = float(
+                        pair.get("volume", {}).get("h24", 0)
+                    )
+
+                    fdv = float(
+                        pair.get("fdv", 0)
+                    )
+
+                    # 🚨 minimum filters
                     if liquidity < 10000:
                         continue
+
+                    # =========================
+                    # 🔥 SNIPER SCORE ENGINE
+                    # =========================
+
+                    score = 0
+
+                    # liquidity
+                    if liquidity > 50000:
+                        score += 20
+
+                    if liquidity > 100000:
+                        score += 20
+
+                    # volume
+                    if volume > 25000:
+                        score += 20
+
+                    if volume > 100000:
+                        score += 20
+
+                    # momentum
+                    if change > 5:
+                        score += 10
+
+                    if change > 15:
+                        score += 10
+
+                    # fdv
+                    if fdv > 1000000:
+                        score += 10
+
+                    # 🚨 sniper rating
+                    if score >= 80:
+                        rating = "🔥 HOT"
+
+                    elif score >= 60:
+                        rating = "🚀 GOOD"
+
+                    elif score >= 40:
+                        rating = "👀 WATCH"
+
+                    else:
+                        rating = "⚠️ RISKY"
 
                     added.add(symbol)
 
                     result.append({
                         "name": symbol,
-                        "price": round(
-                            float(pair.get("priceUsd", 0)),
-                            6
-                        ),
-                        "change": round(
-                            float(
-                                pair.get(
-                                    "priceChange",
-                                    {}
-                                ).get("h24", 0)
-                            ),
-                            2
-                        ),
-                        "type": "TRENDING"
+                        "price": round(price, 6),
+                        "change": round(change, 2),
+                        "liquidity": round(liquidity, 2),
+                        "volume": round(volume, 2),
+                        "score": score,
+                        "rating": rating
                     })
 
                     break
@@ -123,68 +172,13 @@ def scan():
                 except:
                     continue
 
-        # ==================================
-        # 🚀 NEW PAIR DETECTOR
-        # ==================================
-
-        new_pair_url = (
-            "https://api.dexscreener.com/token-profiles/latest/v1"
-        )
-
-        response = requests.get(
-            new_pair_url,
-            timeout=15,
-            headers={
-                "User-Agent": "Mozilla/5.0"
-            }
-        )
-
-        if response.status_code == 200:
-
-            data = response.json()
-
-            for token in data[:25]:
-
-                try:
-
-                    chain = token.get("chainId", "")
-
-                    if chain.lower() != "solana":
-                        continue
-
-                    symbol = token.get("tokenSymbol", "")
-
-                    if not symbol:
-                        continue
-
-                    if symbol in added:
-                        continue
-
-                    added.add(symbol)
-
-                    result.append({
-                        "name": symbol,
-                        "price": 0,
-                        "change": 0,
-                        "type": "NEW"
-                    })
-
-                except:
-                    continue
-
-        # 🔥 Sort:
-        # NEW pairs first
-        # then biggest movers
-
+        # 🔥 sort by highest score
         result = sorted(
             result,
-            key=lambda x: (
-                x["type"] != "NEW",
-                -abs(x["change"])
-            )
+            key=lambda x: x["score"],
+            reverse=True
         )
 
-        # 💾 cache
         cache = result
         last_update = time.time()
 
