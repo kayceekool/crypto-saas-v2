@@ -1,1 +1,4 @@
-def authenticate_user(): return {'user':'ok'}
+import uuid
+
+def create_token():
+    return str(uuid.uuid4())
