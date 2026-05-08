@@ -17,8 +17,6 @@ export default function Home() {
 
       const data = await response.json();
 
-      console.log(data);
-
       if (Array.isArray(data)) {
 
         setCoins(data);
@@ -46,7 +44,6 @@ export default function Home() {
 
     loadScanner();
 
-    // 🔥 auto refresh
     const interval = setInterval(() => {
       loadScanner();
     }, 15000);
@@ -55,65 +52,61 @@ export default function Home() {
 
   }, []);
 
-  const page = {
-    background: "#050505",
-    minHeight: "100vh",
-    color: "white",
-    padding: "20px",
-    fontFamily: "Arial"
-  };
+  const styles = {
 
-  const table = {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginTop: "20px"
-  };
+    page: {
+      background: "#050505",
+      minHeight: "100vh",
+      color: "white",
+      padding: "20px",
+      fontFamily: "Arial"
+    },
 
-  const th = {
-    background: "#00ffaa",
-    color: "#000",
-    padding: "16px",
-    fontSize: "22px"
-  };
+    table: {
+      width: "100%",
+      borderCollapse: "collapse",
+      marginTop: "20px"
+    },
 
-  const td = {
-    padding: "18px",
-    borderBottom: "1px solid #222",
-    textAlign: "center",
-    fontSize: "18px"
+    th: {
+      background: "#00ffaa",
+      color: "#000",
+      padding: "14px",
+      fontSize: "18px"
+    },
+
+    td: {
+      padding: "14px",
+      borderBottom: "1px solid #222",
+      textAlign: "center"
+    }
+
   };
 
   return (
 
-    <div style={page}>
+    <div style={styles.page}>
 
-      <h1
-        style={{
-          fontSize: "56px",
-          marginBottom: "10px"
-        }}
-      >
+      <h1 style={{ fontSize: "52px" }}>
         🚀 CRYPTO SCANNER
       </h1>
 
-      <p
-        style={{
-          color: "#00ffaa",
-          fontSize: "18px"
-        }}
-      >
+      <p style={{ color: "#00ffaa" }}>
         {status}
       </p>
 
-      <table style={table}>
+      <table style={styles.table}>
 
         <thead>
 
           <tr>
-            <th style={th}>Type</th>
-            <th style={th}>Token</th>
-            <th style={th}>Price ($)</th>
-            <th style={th}>24h %</th>
+            <th style={styles.th}>Token</th>
+            <th style={styles.th}>Price</th>
+            <th style={styles.th}>24h %</th>
+            <th style={styles.th}>Liquidity</th>
+            <th style={styles.th}>Volume</th>
+            <th style={styles.th}>Score</th>
+            <th style={styles.th}>Rating</th>
           </tr>
 
         </thead>
@@ -122,63 +115,30 @@ export default function Home() {
 
           {coins.map((coin, i) => (
 
-            <tr key={i}>
+            <tr
+              key={i}
+              style={{
+                background:
+                  coin.score >= 80
+                    ? "#102010"
+                    : "transparent"
+              }}
+            >
 
-              {/* 🔥 TOKEN TYPE */}
-              <td style={td}>
-
-                {coin.type === "NEW" ? (
-
-                  <span
-                    style={{
-                      background: "#ff0080",
-                      padding: "6px 12px",
-                      borderRadius: "12px",
-                      fontWeight: "bold",
-                      color: "white"
-                    }}
-                  >
-                    NEW
-                  </span>
-
-                ) : (
-
-                  <span
-                    style={{
-                      background: "#00ffaa",
-                      padding: "6px 12px",
-                      borderRadius: "12px",
-                      fontWeight: "bold",
-                      color: "#000"
-                    }}
-                  >
-                    TRENDING
-                  </span>
-
-                )}
-
-              </td>
-
-              {/* TOKEN */}
-              <td style={td}>
+              <td style={styles.td}>
                 {coin.name}
               </td>
 
-              {/* PRICE */}
-              <td style={td}>
-
-                {coin.price > 0
-                  ? `$${Number(
-                      coin.price
-                    ).toLocaleString()}`
-                  : "NEW"}
-
+              <td style={styles.td}>
+                $
+                {Number(
+                  coin.price
+                ).toLocaleString()}
               </td>
 
-              {/* CHANGE */}
               <td
                 style={{
-                  ...td,
+                  ...styles.td,
                   color:
                     coin.change >= 0
                       ? "#00ff99"
@@ -186,10 +146,54 @@ export default function Home() {
                   fontWeight: "bold"
                 }}
               >
+                {coin.change}%
+              </td>
 
-                {coin.type === "NEW"
-                  ? "JUST LAUNCHED 🚀"
-                  : `${coin.change}%`}
+              <td style={styles.td}>
+                $
+                {Number(
+                  coin.liquidity
+                ).toLocaleString()}
+              </td>
+
+              <td style={styles.td}>
+                $
+                {Number(
+                  coin.volume
+                ).toLocaleString()}
+              </td>
+
+              <td
+                style={{
+                  ...styles.td,
+                  color:
+                    coin.score >= 80
+                      ? "#00ff99"
+                      : "#fff",
+                  fontWeight: "bold"
+                }}
+              >
+                {coin.score}
+              </td>
+
+              <td style={styles.td}>
+
+                <span
+                  style={{
+                    background:
+                      coin.rating === "🔥 HOT"
+                        ? "#ff0033"
+                        : coin.rating === "🚀 GOOD"
+                        ? "#00aa66"
+                        : "#444",
+
+                    padding: "6px 12px",
+                    borderRadius: "10px",
+                    fontWeight: "bold"
+                  }}
+                >
+                  {coin.rating}
+                </span>
 
               </td>
 
