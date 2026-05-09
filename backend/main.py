@@ -9,8 +9,17 @@ import time
 # 🚀 IMPORTS
 # =========================
 
-from sniper_engine import discover_new_pairs
-from exchanges.jupiter import get_jupiter_quote
+try:
+    from sniper_engine import discover_new_pairs
+except:
+    def discover_new_pairs():
+        return []
+
+try:
+    from exchanges.jupiter import get_jupiter_quote
+except:
+    def get_jupiter_quote():
+        return {"error": "offline"}
 
 app = FastAPI()
 
