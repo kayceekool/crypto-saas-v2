@@ -52,10 +52,14 @@ last_update = 0
 def home():
 
     return {
+
         "status": "LIVE",
+
         "engine": "INSTITUTIONAL_SNIPER_AI",
-        "dex": "JUPITER",
-        "scanner": "ACTIVE"
+
+        "scanner": "ACTIVE",
+
+        "dex": "JUPITER_ENABLED"
     }
 
 # =========================
@@ -70,7 +74,7 @@ def scan():
     global last_update
 
     # =========================
-    # ⚡ RETURN CACHE
+    # ⚡ CACHE RETURN
     # =========================
 
     if (
@@ -79,9 +83,13 @@ def scan():
     ):
 
         return JSONResponse(content={
+
             "scanner": scanner_cache,
+
             "new_pairs": sniper_cache,
+
             "cached": True
+
         })
 
     try:
@@ -98,7 +106,8 @@ def scan():
             "bonk",
             "pepe",
             "moon",
-            "gem"
+            "gem",
+            "launch"
 
         ]
 
@@ -106,8 +115,10 @@ def scan():
 
         added_addresses = set()
 
+        added_symbols = set()
+
         # =========================
-        # 🔍 SEARCH LOOP
+        # 🔍 MAIN LOOP
         # =========================
 
         for keyword in keywords:
@@ -115,8 +126,11 @@ def scan():
             try:
 
                 response = requests.get(
+
                     f"https://api.dexscreener.com/latest/dex/search/?q={keyword}",
+
                     timeout=15,
+
                     headers={
                         "User-Agent": "Mozilla/5.0"
                     }
@@ -154,19 +168,27 @@ def scan():
                         symbol_upper = symbol.upper()
 
                         # =========================
-                        # 🚫 FILTER MAJOR TOKENS
+                        # 🚫 DUPLICATE SYMBOL FILTER
+                        # =========================
+
+                        if symbol_upper in added_symbols:
+                            continue
+
+                        # =========================
+                        # 🚫 MAJOR TOKEN FILTER
                         # =========================
 
                         banned_new = [
-                            "BONK",
-                            "WIF",
-                            "WOJAK",
-                            "PEPE",
-                            "DOGE",
-                            "SHIB",
+
                             "BTC",
                             "ETH",
-                            "SOL"
+                            "SOL",
+                            "USDT",
+                            "USDC",
+                            "DOGE",
+                            "SHIB",
+                            "WIF"
+
                         ]
 
                         price = float(
@@ -222,21 +244,21 @@ def scan():
                         # 🚨 LIQUIDITY FILTER
                         # =========================
 
-                        if liquidity < 10000:
+                        if liquidity < 15000:
                             continue
 
                         # =========================
-                        # 🚨 FAKE TOKEN FILTER
+                        # 🚨 DEAD TOKEN FILTER
                         # =========================
 
-                        if volume < 100:
+                        if volume < 1000:
                             continue
 
                         if buys <= 0:
                             continue
 
                         # =========================
-                        # 🚀 REAL NEW TOKEN DETECTION
+                        # 🚀 NEW TOKEN DETECTION
                         # =========================
 
                         pair_created = pair.get(
@@ -299,15 +321,47 @@ def scan():
                         if buys > sells * 2:
                             score += 20
 
-                        # fresh launch bonus
+                        # =========================
+                        # 🚀 MOMENTUM ACCELERATION
+                        # =========================
+
+                        if volume > liquidity:
+                            score += 20
+
+                        if change > 30:
+                            score += 30
+
+                        if buys > sells * 3:
+                            score += 30
+
+                        # =========================
+                        # 🚀 FRESH LAUNCH BONUS
+                        # =========================
+
                         if token_type == "NEW":
                             score += 40
+
+                        # =========================
+                        # 🚀 ULTRA EARLY SNIPER
+                        # =========================
+
+                        if age_minutes <= 30:
+                            score += 60
+
+                        elif age_minutes <= 120:
+                            score += 40
+
+                        elif age_minutes <= 360:
+                            score += 20
 
                         # =========================
                         # 🚨 RATING
                         # =========================
 
-                        if score >= 180:
+                        if score >= 220:
+                            rating = "🚨 GOD MODE"
+
+                        elif score >= 180:
                             rating = "🚨 EXTREME"
 
                         elif score >= 120:
@@ -339,7 +393,10 @@ def scan():
                         # 📡 SIGNAL
                         # =========================
 
-                        if score >= 180:
+                        if score >= 220:
+                            signal = "NUCLEAR BUY"
+
+                        elif score >= 180:
                             signal = "STRONG BUY"
 
                         elif score >= 120:
@@ -347,6 +404,10 @@ def scan():
 
                         else:
                             signal = "NO"
+
+                        # =========================
+                        # 🔗 URL
+                        # =========================
 
                         dex_url = (
                             f"https://dexscreener.com/solana/{pair_address}"
@@ -359,6 +420,8 @@ def scan():
                         jupiter = get_jupiter_quote()
 
                         added_addresses.add(pair_address)
+
+                        added_symbols.add(symbol_upper)
 
                         results.append({
 
@@ -410,22 +473,36 @@ def scan():
         sniper_pairs = discover_new_pairs()
 
         # =========================
-        # 📊 SORT
+        # 📊 INSTITUTIONAL SORT
         # =========================
 
         results = sorted(
+
             results,
+
             key=lambda x: (
+
                 x["score"],
-                x["volume"]
+
+                x["volume"],
+
+                x["liquidity"],
+
+                x["change"]
+
             ),
+
             reverse=True
         )
 
-        # limit size
+        # =========================
+        # 🚀 LIMIT
+        # =========================
+
         results = results[:25]
 
         scanner_cache = results
+
         sniper_cache = sniper_pairs
 
         last_update = time.time()
