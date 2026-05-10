@@ -108,6 +108,9 @@ def scan():
 
         added_addresses = set()
 
+# prevent duplicate symbols
+best_symbols = {}
+
         # =========================
         # 🔍 MAIN SCANNER LOOP
         # =========================
@@ -425,36 +428,83 @@ def scan():
 
                         jupiter = get_jupiter_quote()
 
-                        results.append({
+                        # =========================
+# 🧹 SANITY FILTERS
+# =========================
 
-                            "type": token_type,
+# remove obvious junk
 
-                            "name": symbol.upper(),
+if volume < 100:
+    continue
 
-                            "price": round(price, 8),
+if liquidity < 10000:
+    continue
 
-                            "change": round(change, 2),
+# avoid absurd fake liquidity
 
-                            "liquidity": round(liquidity, 2),
+if liquidity > 1000000000:
+    continue
 
-                            "volume": round(volume, 2),
+# avoid weird symbols
 
-                            "score": score,
+if len(symbol) > 15:
+    continue
 
-                            "rating": rating,
+# avoid emoji spam coins
 
-                            "risk": risk,
+if any(ord(c) > 10000 for c in symbol):
+    continue
 
-                            "signal": signal,
+coin_data = {
 
-                            "url": dex_url,
+    "type": token_type,
 
-                            "jupiter": (
-                                "ONLINE"
-                                if "error" not in jupiter
-                                else "OFFLINE"
-                            )
-                        })
+    "name": symbol.upper(),
+
+    "price": round(price, 8),
+
+    "change": round(change, 2),
+
+    "liquidity": round(liquidity, 2),
+
+    "volume": round(volume, 2),
+
+    "score": score,
+
+    "rating": rating,
+
+    "risk": risk,
+
+    "signal": signal,
+
+    "url": dex_url,
+
+    "jupiter": (
+        "ONLINE"
+        if "error" not in jupiter
+        else "OFFLINE"
+    )
+}
+
+# =========================
+# 🧠 KEEP ONLY BEST VERSION
+# =========================
+
+symbol_key = symbol.upper()
+
+existing = best_symbols.get(symbol_key)
+
+if existing is None:
+
+    best_symbols[symbol_key] = coin_data
+
+else:
+
+    # keep higher score version only
+
+    if score > existing["score"]:
+
+        best_symbols[symbol_key] = coin_data
 
                     except:
                         continue
