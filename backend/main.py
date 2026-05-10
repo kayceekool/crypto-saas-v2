@@ -52,10 +52,10 @@ last_update = 0
 def home():
 
     return {
-        "status": "HEDGE_FUND_SAAS_RUNNING",
-        "scanner": "ACTIVE",
-        "sniper_engine": "ACTIVE",
-        "dex": "JUPITER_ENABLED"
+        "status": "LIVE",
+        "engine": "INSTITUTIONAL_SNIPER_AI",
+        "dex": "JUPITER",
+        "scanner": "ACTIVE"
     }
 
 # =========================
@@ -70,7 +70,7 @@ def scan():
     global last_update
 
     # =========================
-    # ⚡ CACHE
+    # ⚡ RETURN CACHE
     # =========================
 
     if (
@@ -80,28 +80,34 @@ def scan():
 
         return JSONResponse(content={
             "scanner": scanner_cache,
-            "new_pairs": sniper_cache
+            "new_pairs": sniper_cache,
+            "cached": True
         })
 
     try:
 
         keywords = [
+
             "pump",
             "ai",
-            "sol",
             "meme",
+            "sol",
             "cat",
             "dog",
-            "pepe",
+            "wojak",
             "bonk",
-            "wojak"
+            "pepe",
+            "moon",
+            "gem"
+
         ]
 
         results = []
-        added = set()
+
+        added_addresses = set()
 
         # =========================
-        # 🔍 MAIN SCANNER LOOP
+        # 🔍 SEARCH LOOP
         # =========================
 
         for keyword in keywords:
@@ -135,10 +141,33 @@ def scan():
                         if chain != "solana":
                             continue
 
+                        pair_address = pair.get(
+                            "pairAddress",
+                            ""
+                        )
+
+                        if pair_address in added_addresses:
+                            continue
+
                         symbol = pair["baseToken"]["symbol"]
 
-                        if symbol in added:
-                            continue
+                        symbol_upper = symbol.upper()
+
+                        # =========================
+                        # 🚫 FILTER MAJOR TOKENS
+                        # =========================
+
+                        banned_new = [
+                            "BONK",
+                            "WIF",
+                            "WOJAK",
+                            "PEPE",
+                            "DOGE",
+                            "SHIB",
+                            "BTC",
+                            "ETH",
+                            "SOL"
+                        ]
 
                         price = float(
                             pair.get("priceUsd", 0)
@@ -165,25 +194,75 @@ def scan():
                             ).get("h24", 0)
                         )
 
+                        buys = float(
+                            pair.get(
+                                "txns",
+                                {}
+                            ).get(
+                                "h24",
+                                {}
+                            ).get("buys", 0)
+                        )
+
+                        sells = float(
+                            pair.get(
+                                "txns",
+                                {}
+                            ).get(
+                                "h24",
+                                {}
+                            ).get("sells", 0)
+                        )
+
                         fdv = float(
                             pair.get("fdv", 0)
                         )
 
-                        pair_address = pair.get(
-                            "pairAddress",
-                            ""
-                        )
-
-                        dex_url = (
-                            f"https://dexscreener.com/solana/{pair_address}"
-                        )
-
                         # =========================
-                        # 🚨 FILTERS
+                        # 🚨 LIQUIDITY FILTER
                         # =========================
 
                         if liquidity < 10000:
                             continue
+
+                        # =========================
+                        # 🚨 FAKE TOKEN FILTER
+                        # =========================
+
+                        if volume < 100:
+                            continue
+
+                        if buys <= 0:
+                            continue
+
+                        # =========================
+                        # 🚀 REAL NEW TOKEN DETECTION
+                        # =========================
+
+                        pair_created = pair.get(
+                            "pairCreatedAt",
+                            0
+                        )
+
+                        age_minutes = 999999
+
+                        if pair_created:
+
+                            age_minutes = (
+                                time.time() -
+                                (pair_created / 1000)
+                            ) / 60
+
+                        if (
+                            age_minutes <= 360
+                            and symbol_upper not in banned_new
+                        ):
+
+                            token_type = "NEW"
+
+                        else:
+
+                            token_type = "TRENDING"
 
                         # =========================
                         # 🧠 AI SCORE
@@ -195,7 +274,7 @@ def scan():
                         if liquidity > 50000:
                             score += 30
 
-                        if liquidity > 100000:
+                        if liquidity > 150000:
                             score += 30
 
                         # volume
@@ -209,12 +288,20 @@ def scan():
                         if change > 5:
                             score += 20
 
-                        if change > 15:
+                        if change > 20:
                             score += 20
 
                         # fdv
                         if fdv > 1000000:
                             score += 20
+
+                        # whale flow
+                        if buys > sells * 2:
+                            score += 20
+
+                        # fresh launch bonus
+                        if token_type == "NEW":
+                            score += 40
 
                         # =========================
                         # 🚨 RATING
@@ -261,48 +348,23 @@ def scan():
                         else:
                             signal = "NO"
 
+                        dex_url = (
+                            f"https://dexscreener.com/solana/{pair_address}"
+                        )
+
                         # =========================
-                        # ⚡ JUPITER CHECK
+                        # ⚡ JUPITER
                         # =========================
 
                         jupiter = get_jupiter_quote()
 
-                # =========================
-# 🚀 REAL NEW TOKEN DETECTION
-# =========================
-
-pair_created = pair.get(
-    "pairCreatedAt",
-    0
-)
-
-age_minutes = 999999
-
-if pair_created:
-
-    age_minutes = (
-        time.time() - (
-            pair_created / 1000
-        )
-    ) / 60
-
-# ✅ REAL NEW TOKEN
-# less than 6 hours old
-
-if age_minutes <= 360:
-
-    token_type = "NEW"
-
-else:
-
-    token_type = "TRENDING"
-                        added.add(symbol)
+                        added_addresses.add(pair_address)
 
                         results.append({
 
                             "type": token_type,
 
-                            "name": symbol.upper(),
+                            "name": symbol_upper,
 
                             "price": round(price, 8),
 
@@ -321,6 +383,12 @@ else:
                             "signal": signal,
 
                             "url": dex_url,
+
+                            "buys": buys,
+
+                            "sells": sells,
+
+                            "age_minutes": round(age_minutes, 1),
 
                             "jupiter": (
                                 "ONLINE"
@@ -347,9 +415,15 @@ else:
 
         results = sorted(
             results,
-            key=lambda x: x["score"],
+            key=lambda x: (
+                x["score"],
+                x["volume"]
+            ),
             reverse=True
         )
+
+        # limit size
+        results = results[:25]
 
         scanner_cache = results
         sniper_cache = sniper_pairs
@@ -360,7 +434,9 @@ else:
 
             "scanner": results,
 
-            "new_pairs": sniper_pairs
+            "new_pairs": sniper_pairs,
+
+            "cached": False
 
         })
 
