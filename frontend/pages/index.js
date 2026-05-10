@@ -114,13 +114,17 @@ export default function Home() {
         {status}
       </p>
 
-      {loading && (
-
-        <p style={{ color: "#888" }}>
-          Updating live market data...
-        </p>
-
-      )}
+     <p
+  style={{
+    color: loading ? "#00ffaa" : "#666",
+    transition: "0.3s",
+    marginBottom: "10px"
+  }}
+>
+  {loading
+    ? "🟢 Syncing live market feed..."
+    : "⚡ AI engine online"}
+</p>
 
       <table style={table}>
 
