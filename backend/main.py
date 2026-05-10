@@ -52,13 +52,9 @@ last_update = 0
 def home():
 
     return {
-
-        "status": "LIVE",
-
-        "engine": "INSTITUTIONAL_SNIPER_AI",
-
+        "status": "HEDGE_FUND_SAAS_RUNNING",
         "scanner": "ACTIVE",
-
+        "sniper_engine": "ACTIVE",
         "dex": "JUPITER_ENABLED"
     }
 
@@ -74,7 +70,7 @@ def scan():
     global last_update
 
     # =========================
-    # ⚡ CACHE RETURN
+    # ⚡ RETURN CACHE FAST
     # =========================
 
     if (
@@ -83,42 +79,37 @@ def scan():
     ):
 
         return JSONResponse(content={
-
             "scanner": scanner_cache,
-
-            "new_pairs": sniper_cache,
-
-            "cached": True
-
+            "new_pairs": sniper_cache
         })
 
     try:
 
         keywords = [
-
             "pump",
             "ai",
-            "meme",
             "sol",
+            "meme",
             "cat",
             "dog",
-            "wojak",
-            "bonk",
             "pepe",
+            "bonk",
+            "wojak",
+            "launch",
             "moon",
             "gem",
-            "launch"
-
+            "100x",
+            "alpha",
+            "degen",
+            "fart"
         ]
 
         results = []
 
         added_addresses = set()
 
-        added_symbols = set()
-
         # =========================
-        # 🔍 MAIN LOOP
+        # 🔍 MAIN SCANNER LOOP
         # =========================
 
         for keyword in keywords:
@@ -126,11 +117,8 @@ def scan():
             try:
 
                 response = requests.get(
-
                     f"https://api.dexscreener.com/latest/dex/search/?q={keyword}",
-
                     timeout=15,
-
                     headers={
                         "User-Agent": "Mozilla/5.0"
                     }
@@ -163,33 +151,9 @@ def scan():
                         if pair_address in added_addresses:
                             continue
 
+                        added_addresses.add(pair_address)
+
                         symbol = pair["baseToken"]["symbol"]
-
-                        symbol_upper = symbol.upper()
-
-                        # =========================
-                        # 🚫 DUPLICATE SYMBOL FILTER
-                        # =========================
-
-                        if symbol_upper in added_symbols:
-                            continue
-
-                        # =========================
-                        # 🚫 MAJOR TOKEN FILTER
-                        # =========================
-
-                        banned_new = [
-
-                            "BTC",
-                            "ETH",
-                            "SOL",
-                            "USDT",
-                            "USDC",
-                            "DOGE",
-                            "SHIB",
-                            "WIF"
-
-                        ]
 
                         price = float(
                             pair.get("priceUsd", 0)
@@ -216,49 +180,23 @@ def scan():
                             ).get("h24", 0)
                         )
 
-                        buys = float(
-                            pair.get(
-                                "txns",
-                                {}
-                            ).get(
-                                "h24",
-                                {}
-                            ).get("buys", 0)
-                        )
-
-                        sells = float(
-                            pair.get(
-                                "txns",
-                                {}
-                            ).get(
-                                "h24",
-                                {}
-                            ).get("sells", 0)
-                        )
-
                         fdv = float(
                             pair.get("fdv", 0)
                         )
 
+                        dex_url = (
+                            f"https://dexscreener.com/solana/{pair_address}"
+                        )
+
                         # =========================
-                        # 🚨 LIQUIDITY FILTER
+                        # 🚨 BASIC FILTERS
                         # =========================
 
-                        if liquidity < 15000:
+                        if liquidity < 10000:
                             continue
 
                         # =========================
-                        # 🚨 DEAD TOKEN FILTER
-                        # =========================
-
-                        if volume < 1000:
-                            continue
-
-                        if buys <= 0:
-                            continue
-
-                        # =========================
-                        # 🚀 NEW TOKEN DETECTION
+                        # 🚀 REAL NEW TOKEN DETECTION
                         # =========================
 
                         pair_created = pair.get(
@@ -275,10 +213,7 @@ def scan():
                                 (pair_created / 1000)
                             ) / 60
 
-                        if (
-                            age_minutes <= 360
-                            and symbol_upper not in banned_new
-                        ):
+                        if age_minutes <= 360:
 
                             token_type = "NEW"
 
@@ -287,147 +222,214 @@ def scan():
                             token_type = "TRENDING"
 
                         # =========================
-                        # 🧠 AI SCORE
+                        # 🧠 INSTITUTIONAL AI ENGINE
                         # =========================
 
                         score = 0
 
-                        # liquidity
+                        # liquidity quality
+
+                        if liquidity > 20000:
+                            score += 20
+
                         if liquidity > 50000:
                             score += 30
 
-                        if liquidity > 150000:
-                            score += 30
+                        if liquidity > 100000:
+                            score += 40
 
-                        # volume
-                        if volume > 25000:
+                        if liquidity > 500000:
+                            score += 50
+
+                        # volume strength
+
+                        if volume > 10000:
+                            score += 20
+
+                        if volume > 50000:
                             score += 30
 
                         if volume > 100000:
-                            score += 30
+                            score += 40
+
+                        if volume > 500000:
+                            score += 50
 
                         # momentum
-                        if change > 5:
+
+                        if change > 3:
                             score += 20
 
-                        if change > 20:
-                            score += 20
+                        if change > 8:
+                            score += 30
 
-                        # fdv
-                        if fdv > 1000000:
-                            score += 20
-
-                        # whale flow
-                        if buys > sells * 2:
-                            score += 20
-
-                        # =========================
-                        # 🚀 MOMENTUM ACCELERATION
-                        # =========================
-
-                        if volume > liquidity:
-                            score += 20
+                        if change > 15:
+                            score += 40
 
                         if change > 30:
-                            score += 30
-
-                        if buys > sells * 3:
-                            score += 30
-
-                        # =========================
-                        # 🚀 FRESH LAUNCH BONUS
-                        # =========================
-
-                        if token_type == "NEW":
-                            score += 40
-
-                        # =========================
-                        # 🚀 ULTRA EARLY SNIPER
-                        # =========================
-
-                        if age_minutes <= 30:
                             score += 60
 
-                        elif age_minutes <= 120:
+                        if change > 100:
+                            score += 120
+
+                        if change > 500:
+                            score += 200
+
+                        if change > 1000:
+                            score += 300
+
+                        # volume/liquidity ratio
+
+                        if liquidity > 0:
+
+                            ratio = volume / liquidity
+
+                            if ratio > 0.5:
+                                score += 20
+
+                            if ratio > 1:
+                                score += 40
+
+                            if ratio > 2:
+                                score += 60
+
+                            if ratio > 5:
+                                score += 120
+
+                        # low cap detection
+
+                        if fdv > 0 and fdv < 500000:
                             score += 40
 
-                        elif age_minutes <= 360:
-                            score += 20
+                        if fdv > 0 and fdv < 200000:
+                            score += 80
+
+                        # early trend engine
+
+                        if (
+                            liquidity > 30000
+                            and volume > liquidity
+                            and change > 10
+                        ):
+                            score += 80
+
+                        # viral breakout engine
+
+                        if (
+                            volume > liquidity * 3
+                            and change > 25
+                        ):
+                            score += 150
+
+                        # smart money
+
+                        if (
+                            liquidity > 100000
+                            and volume > 200000
+                            and change > 15
+                        ):
+                            score += 100
+
+                        # microcap sniper
+
+                        if (
+                            liquidity < 100000
+                            and volume > 500000
+                            and change > 20
+                        ):
+                            score += 150
 
                         # =========================
-                        # 🚨 RATING
+                        # 🚨 AI RATING ENGINE
                         # =========================
 
-                        if score >= 220:
-                            rating = "🚨 GOD MODE"
+                        if score >= 700:
+
+                            rating = "👑 GOD CANDLE"
+
+                        elif score >= 500:
+
+                            rating = "🚀 PARABOLIC"
+
+                        elif score >= 300:
+
+                            rating = "💎 GEM"
 
                         elif score >= 180:
+
                             rating = "🚨 EXTREME"
 
                         elif score >= 120:
+
                             rating = "🔥 HOT"
 
                         elif score >= 80:
+
                             rating = "🚀 GOOD"
 
                         elif score >= 50:
+
                             rating = "👀 WATCH"
 
                         else:
+
                             rating = "⚠️ RISKY"
 
                         # =========================
-                        # 🛡️ RISK
+                        # 🛡️ RISK ENGINE
                         # =========================
 
                         if liquidity > 100000:
+
                             risk = "LOW"
 
                         elif liquidity > 40000:
+
                             risk = "MEDIUM"
 
                         else:
+
                             risk = "HIGH"
 
                         # =========================
-                        # 📡 SIGNAL
+                        # 📡 AI SIGNAL ENGINE
                         # =========================
 
-                        if score >= 220:
-                            signal = "NUCLEAR BUY"
+                        if score >= 700:
+
+                            signal = "ULTRA SEND"
+
+                        elif score >= 500:
+
+                            signal = "PARABOLIC"
+
+                        elif score >= 300:
+
+                            signal = "SNIPER ENTRY"
 
                         elif score >= 180:
+
                             signal = "STRONG BUY"
 
                         elif score >= 120:
+
                             signal = "BUY"
 
                         else:
+
                             signal = "NO"
 
                         # =========================
-                        # 🔗 URL
-                        # =========================
-
-                        dex_url = (
-                            f"https://dexscreener.com/solana/{pair_address}"
-                        )
-
-                        # =========================
-                        # ⚡ JUPITER
+                        # ⚡ JUPITER CHECK
                         # =========================
 
                         jupiter = get_jupiter_quote()
-
-                        added_addresses.add(pair_address)
-
-                        added_symbols.add(symbol_upper)
 
                         results.append({
 
                             "type": token_type,
 
-                            "name": symbol_upper,
+                            "name": symbol.upper(),
 
                             "price": round(price, 8),
 
@@ -446,12 +448,6 @@ def scan():
                             "signal": signal,
 
                             "url": dex_url,
-
-                            "buys": buys,
-
-                            "sells": sells,
-
-                            "age_minutes": round(age_minutes, 1),
 
                             "jupiter": (
                                 "ONLINE"
@@ -473,36 +469,20 @@ def scan():
         sniper_pairs = discover_new_pairs()
 
         # =========================
-        # 📊 INSTITUTIONAL SORT
+        # 📊 SORT
         # =========================
 
         results = sorted(
-
             results,
-
-            key=lambda x: (
-
-                x["score"],
-
-                x["volume"],
-
-                x["liquidity"],
-
-                x["change"]
-
-            ),
-
+            key=lambda x: x["score"],
             reverse=True
         )
 
-        # =========================
-        # 🚀 LIMIT
-        # =========================
+        # limit dashboard size
 
-        results = results[:25]
+        results = results[:15]
 
         scanner_cache = results
-
         sniper_cache = sniper_pairs
 
         last_update = time.time()
@@ -511,9 +491,7 @@ def scan():
 
             "scanner": results,
 
-            "new_pairs": sniper_pairs,
-
-            "cached": False
+            "new_pairs": sniper_pairs
 
         })
 
