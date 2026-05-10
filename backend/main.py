@@ -267,16 +267,35 @@ def scan():
 
                         jupiter = get_jupiter_quote()
 
-                        # =========================
-                        # 🔥 TOKEN TYPE
-                        # =========================
+                # =========================
+# 🚀 REAL NEW TOKEN DETECTION
+# =========================
 
-                        token_type = (
-                            "NEW"
-                            if volume > liquidity
-                            else "TRENDING"
-                        )
+pair_created = pair.get(
+    "pairCreatedAt",
+    0
+)
 
+age_minutes = 999999
+
+if pair_created:
+
+    age_minutes = (
+        time.time() - (
+            pair_created / 1000
+        )
+    ) / 60
+
+# ✅ REAL NEW TOKEN
+# less than 6 hours old
+
+if age_minutes <= 360:
+
+    token_type = "NEW"
+
+else:
+
+    token_type = "TRENDING"
                         added.add(symbol)
 
                         results.append({
