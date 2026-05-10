@@ -512,6 +512,12 @@ else:
             except:
                 continue
 
+# =========================
+# 🧠 FINAL SANITY OUTPUT
+# =========================
+
+results = list(best_symbols.values())
+
         # =========================
         # 🚀 SOL SNIPER ENGINE
         # =========================
@@ -530,7 +536,7 @@ else:
 
         # limit dashboard size
 
-        results = results[:15]
+        results = results[:12]
 
         scanner_cache = results
         sniper_cache = sniper_pairs
