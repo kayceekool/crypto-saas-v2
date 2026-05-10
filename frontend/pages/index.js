@@ -3,17 +3,18 @@ import { useEffect, useState } from "react";
 export default function Home() {
 
   const [coins, setCoins] = useState([]);
+
   const [status, setStatus] = useState(
     "Loading institutional sniper AI..."
   );
 
-  const [loading, setLoading] = useState(false);
+  // =========================
+  // 🚀 LOAD SCANNER
+  // =========================
 
   async function loadScanner() {
 
     try {
-
-      setLoading(true);
 
       const res = await fetch(
         "https://crypto-saas-v2.onrender.com/scan"
@@ -25,15 +26,12 @@ export default function Home() {
 
       if (data.scanner) {
 
+        // ✅ UPDATE ONLY WHEN DATA READY
         setCoins(data.scanner);
 
         setStatus(
           `🔥 Live Sniper AI • ${data.scanner.length} tokens`
         );
-
-      } else {
-
-        setStatus("Invalid backend response");
 
       }
 
@@ -41,14 +39,17 @@ export default function Home() {
 
       console.log(err);
 
-      setStatus("Backend connection failed");
-
-    } finally {
-
-      setLoading(false);
+      // ❌ KEEP OLD DATA ON SCREEN
+      setStatus(
+        "⚠️ Connection unstable — retrying..."
+      );
 
     }
   }
+
+  // =========================
+  // ⚡ AUTO REFRESH
+  // =========================
 
   useEffect(() => {
 
@@ -63,6 +64,10 @@ export default function Home() {
     return () => clearInterval(interval);
 
   }, []);
+
+  // =========================
+  // 🎨 STYLES
+  // =========================
 
   const page = {
     background: "#050505",
@@ -92,6 +97,10 @@ export default function Home() {
     fontSize: "14px"
   };
 
+  // =========================
+  // 🚀 UI
+  // =========================
+
   return (
 
     <div style={page}>
@@ -105,6 +114,8 @@ export default function Home() {
         🚀 CRYPTO SCANNER
       </h1>
 
+      {/* STATUS */}
+
       <p
         style={{
           color: "#00ffaa",
@@ -114,17 +125,18 @@ export default function Home() {
         {status}
       </p>
 
-     <p
-  style={{
-    color: loading ? "#00ffaa" : "#666",
-    transition: "0.3s",
-    marginBottom: "10px"
-  }}
->
-  {loading
-    ? "🟢 Syncing live market feed..."
-    : "⚡ AI engine online"}
-</p>
+      {/* ENGINE STATUS */}
+
+      <p
+        style={{
+          color: "#00ffaa",
+          marginBottom: "10px"
+        }}
+      >
+        ⚡ AI engine online
+      </p>
+
+      {/* TABLE */}
 
       <table style={table}>
 
@@ -217,7 +229,8 @@ export default function Home() {
 
               <td style={td}>
 
-                ${Number(
+                $
+                {Number(
                   coin.price
                 ).toLocaleString()}
 
