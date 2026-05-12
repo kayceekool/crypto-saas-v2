@@ -95,7 +95,7 @@ def scan():
     # ⚡ CACHE SYSTEM
     # =========================
 
-    if scanner_cache and time.time() - last_update < 20:
+    if scanner_cache and time.time() - last_update < 45:
 
         return JSONResponse(content={
             "scanner": scanner_cache,
@@ -208,6 +208,22 @@ def scan():
                             continue
 
                         # =========================
+                        # 🚫 RUG FILTERS
+                        # =========================
+
+                        # suspicious fake pools
+                        if liquidity > 500000 and volume < 500:
+                            continue
+
+                        # fake manipulated giga pumps
+                        if change > 50000 and liquidity < 20000:
+                            continue
+
+                        # dead liquidity pools
+                        if volume < liquidity * 0.0001:
+                            continue
+
+                        # =========================
                         # 🧠 AI SCORE ENGINE
                         # =========================
 
@@ -242,6 +258,23 @@ def scan():
 
                         if change > 100:
                             score += 140
+
+                        # =========================
+                        # 🚀 EARLY EXPLOSION DETECTOR
+                        # =========================
+
+                        if (
+                            age_hours <= 6 and
+                            volume > liquidity and
+                            change > 40
+                        ):
+                            score += 200
+
+                        if (
+                            age_hours <= 3 and
+                            volume > liquidity * 2
+                        ):
+                            score += 250
 
                         if change > 500:
                             score += 240
@@ -331,8 +364,12 @@ def scan():
                         # 🐋 WHALE ENGINE
                         # =========================
 
-                        if volume > liquidity * 1.5:
+                        if volume > liquidity * 3:
+                            whales = "🐋 AGGRESSIVE WHALES"
+
+                        elif volume > liquidity * 1.5:
                             whales = "🐋 WHALE BUYING"
+
                         else:
                             whales = "NONE"
 
