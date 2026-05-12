@@ -235,94 +235,157 @@ def scan():
                             f"https://dexscreener.com/solana/{pair_address}"
                         )
 
-                        # =========================
-                        # 🚫 FILTERS
-                        # =========================
+        # =========================
+# 🚫 INSTITUTIONAL FILTERS
+# =========================
 
-                        if liquidity < 10000:
-                            continue
+if liquidity < 20000:
+    continue
 
-                        if volume < 100:
-                            continue
+if volume < 1000:
+    continue
 
-                        if fdv <= 0:
-                            fdv = liquidity * 10
+# avoid fake ghost tokens
+if price <= 0:
+    continue
 
-                        # =========================
-                        # 🕒 TOKEN AGE
-                        # =========================
+# suspicious names
+bad_words = [
+    "test",
+    "fake",
+    "scam",
+    "rug",
+    "honeypot",
+    "v2",
+    "v3",
+    "inuinu",
+]
 
-                        age_minutes = 999999
+symbol_lower = symbol.lower()
 
-                        if pair_created:
+if any(x in symbol_lower for x in bad_words):
+    continue
 
-                            age_minutes = (
-                                time.time() - (
-                                    pair_created / 1000
-                                )
-                            ) / 60
+# unrealistic pumps
+if change > 5000:
+    continue
 
-                        age_hours = round(
-                            age_minutes / 60,
-                            1
-                        )
+# insane fake fdv
+if fdv > 50000000000:
+    continue
 
-                        # =========================
-                        # 🚀 NEW TOKEN DETECTION
-                        # =========================
+if fdv <= 0:
+    fdv = liquidity * 10
 
-                        if age_minutes <= 360:
-                            token_type = "NEW"
-                        else:
-                            token_type = "TRENDING"
+# =========================
+# 🕒 TOKEN AGE
+# =========================
 
-                        # =========================
-                        # 🧠 AI SCORE ENGINE
-                        # =========================
+age_minutes = 999999
 
-                        score = 0
+if pair_created:
 
-                        # liquidity
-                        if liquidity > 25000:
-                            score += 30
+    age_minutes = (
+        time.time() - (
+            pair_created / 1000
+        )
+    ) / 60
 
-                        if liquidity > 100000:
-                            score += 50
+age_hours = round(
+    age_minutes / 60,
+    1
+)
 
-                        if liquidity > 500000:
-                            score += 70
+# =========================
+# 🚀 NEW TOKEN DETECTION
+# =========================
 
-                        # volume
-                        if volume > 10000:
-                            score += 30
+if age_minutes <= 360:
+    token_type = "NEW"
+else:
+    token_type = "TRENDING"
 
-                        if volume > 100000:
-                            score += 50
+# =========================
+# 🧠 SMART MOMENTUM ENGINE
+# =========================
 
-                        if volume > 500000:
-                            score += 90
+score = 0
 
-                        # momentum
-                        if change > 5:
-                            score += 30
+# liquidity quality
+if liquidity > 25000:
+    score += 20
 
-                        if change > 20:
-                            score += 60
+if liquidity > 100000:
+    score += 40
 
-                        if change > 100:
-                            score += 120
+if liquidity > 500000:
+    score += 60
 
-                        # age boost
-                        if age_minutes <= 360:
-                            score += 100
+# volume quality
+if volume > 10000:
+    score += 20
 
-                        if age_minutes <= 120:
-                            score += 120
+if volume > 100000:
+    score += 40
 
-                        # fdv
-                        if fdv > 1000000:
-                            score += 20
+if volume > 500000:
+    score += 70
 
+# price momentum
+if change > 5:
+    score += 20
+
+if change > 20:
+    score += 40
+
+if change > 100:
+    score += 80
+
+# fresh launches
+if age_minutes <= 360:
+    score += 80
+
+if age_minutes <= 120:
+    score += 100
+
+# healthy ratio
+volume_liquidity_ratio = volume / liquidity
+
+if volume_liquidity_ratio > 0.3:
+    score += 30
+
+if volume_liquidity_ratio > 1:
+    score += 50
+
+# fdv sanity
+if (
+    fdv > liquidity * 3
+    and fdv < liquidity * 200
+):
+    score += 20
+
+# =========================
+# 🧠 CONFIDENCE ENGINE
+# =========================
+
+confidence = 50
+
+if liquidity > 50000:
+    confidence += 10
+
+if volume > 50000:
+    confidence += 10
+
+if change > 10:
+    confidence += 10
+
+if age_minutes <= 240:
+    confidence += 10
+
+if whale_status == "🐋 WHALE BUYING":
+    confidence += 10
+
+confidence = min(confidence, 99)
                         # =========================
                         # 🐋 WHALE DETECTION
                         # =========================
