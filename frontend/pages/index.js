@@ -1,215 +1,74 @@
-import { useEffect, useState } from "react";
+const API = "https://YOUR-BACKEND.onrender.com/scan";
 
-export default function Home() {
-
-  const [coins, setCoins] = useState([]);
-  const [status, setStatus] = useState(
-    "Loading sniper engine..."
-  );
-
-  const [loading, setLoading] = useState(false);
-
-  async function loadScanner() {
+async function loadScanner() {
 
     try {
 
-      setLoading(true);
+        const response = await fetch(API);
 
-      const res = await fetch(
-        "https://crypto-saas-v2.onrender.com/scan"
-      );
+        const data = await response.json();
 
-      const data = await res.json();
+        const scanner = data.scanner || [];
 
-      const scannerData = data.scanner || [];
+        const table = document.getElementById("scanner-body");
 
-      setCoins(scannerData);
+        const count = document.getElementById("token-count");
 
-      setStatus(
-        `🔥 Live Sniper AI • ${scannerData.length} tokens`
-      );
+        table.innerHTML = "";
 
-      setLoading(false);
+        count.innerText = scanner.length;
+
+        scanner.forEach((token) => {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${token.type}</td>
+
+                <td>
+                    <a href="${token.url}" target="_blank">
+                        ${token.name}
+                    </a>
+                </td>
+
+                <td>$${token.price}</td>
+
+                <td>${token.change}%</td>
+
+                <td>$${Number(token.liquidity).toLocaleString()}</td>
+
+                <td>$${Number(token.volume).toLocaleString()}</td>
+
+                <td><b>${token.score}</b></td>
+
+                <td>${token.rating}</td>
+
+                <td><b>${token.risk}</b></td>
+
+                <td>${token.signal}</td>
+
+                <td>${token.confidence}</td>
+
+                <td>${token.whales}</td>
+
+                <td>${token.age}</td>
+            `;
+
+            table.appendChild(row);
+        });
+
+        document.getElementById("status").innerText =
+            "⚡ AI engine online";
 
     } catch (err) {
 
-      console.log(err);
+        console.log(err);
 
-      setStatus("Backend connection failed");
-
-      setLoading(false);
+        document.getElementById("status").innerText =
+            "❌ Backend connection failed";
     }
-  }
-
-  useEffect(() => {
-
-    loadScanner();
-
-    const interval = setInterval(
-      loadScanner,
-      30000
-    );
-
-    return () => clearInterval(interval);
-
-  }, []);
-
-  return (
-
-    <div
-      style={{
-        padding: 20,
-        background: "#050505",
-        color: "#fff",
-        minHeight: "100vh",
-        overflowX: "auto"
-      }}
-    >
-
-      <h1>
-        🚀 CRYPTO SCANNER
-      </h1>
-
-      <p style={{ color: "#00ffaa" }}>
-        {status}
-      </p>
-
-      <p style={{ color: "#999" }}>
-        ⚡ AI engine online
-      </p>
-
-      {loading && (
-
-        <p style={{ color: "#666" }}>
-          Syncing live market data...
-        </p>
-
-      )}
-
-      <table
-        style={{
-          width: "100%",
-          marginTop: 20,
-          borderCollapse: "collapse"
-        }}
-      >
-
-        <thead>
-
-          <tr>
-
-            <th>Type</th>
-            <th>Token</th>
-            <th>Price</th>
-            <th>24h %</th>
-            <th>Liquidity</th>
-            <th>Volume</th>
-            <th>Score</th>
-            <th>Rating</th>
-            <th>Risk</th>
-            <th>Signal</th>
-            <th>Confidence</th>
-            <th>Whales</th>
-            <th>Age</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          {coins.map((coin, i) => (
-
-            <tr key={i}>
-
-              <td>
-                {coin.type}
-              </td>
-
-              <td>
-
-                <a
-                  href={coin.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    color: "#00ffaa",
-                    textDecoration: "none"
-                  }}
-                >
-                  {coin.name}
-                </a>
-
-              </td>
-
-              <td>
-                $
-                {Number(
-                  coin.price || 0
-                ).toLocaleString()}
-              </td>
-
-              <td
-                style={{
-                  color:
-                    coin.change >= 0
-                      ? "#00ff99"
-                      : "red"
-                }}
-              >
-                {coin.change}%
-              </td>
-
-              <td>
-                $
-                {Number(
-                  coin.liquidity || 0
-                ).toLocaleString()}
-              </td>
-
-              <td>
-                $
-                {Number(
-                  coin.volume || 0
-                ).toLocaleString()}
-              </td>
-
-              <td>
-                <b>{coin.score}</b>
-              </td>
-
-              <td>
-                {coin.rating}
-              </td>
-
-              <td>
-                <b>{coin.risk}</b>
-              </td>
-
-              <td>
-                {coin.signal}
-              </td>
-
-              <td>
-                {coin.confidence}
-              </td>
-
-              <td>
-                {coin.whales}
-              </td>
-
-              <td>
-                {coin.age}
-              </td>
-
-            </tr>
-
-          ))}
-
-        </tbody>
-
-      </table>
-
-    </div>
-  );
 }
+
+loadScanner();
+
+setInterval(loadScanner, 20000);
