@@ -46,20 +46,6 @@ sniper_cache = []
 last_update = 0
 
 # =========================
-# 🐋 WHALE MEMORY
-# =========================
-
-whale_wallets = [
-
-    "SOL_WHALE_1",
-    "SOL_WHALE_2",
-    "SOL_WHALE_3"
-
-]
-
-recent_whale_activity = {}
-
-# =========================
 # 🏦 ROOT
 # =========================
 
@@ -67,12 +53,10 @@ recent_whale_activity = {}
 def home():
 
     return {
-
         "status": "HEDGE_FUND_SAAS_RUNNING",
         "scanner": "ACTIVE",
         "sniper_engine": "ACTIVE",
         "dex": "JUPITER_ENABLED"
-
     }
 
 # =========================
@@ -87,54 +71,52 @@ def scan():
     global last_update
 
     # =========================
-    # ⚡ SMART CACHE
+    # ⚡ CACHE
     # =========================
 
     if (
         scanner_cache
-        and time.time() - last_update < 15
+        and time.time() - last_update < 20
     ):
 
         return JSONResponse(content={
-
             "scanner": scanner_cache,
             "new_pairs": sniper_cache
-
         })
 
     try:
 
         keywords = [
-
             "pump",
-            "pumpfun",
-            "launch",
-            "moon",
-            "100x",
-            "degen",
-            "alpha",
             "ai",
-            "agi",
+            "sol",
             "meme",
             "cat",
             "dog",
             "pepe",
             "bonk",
             "wojak",
-            "sol",
-            "new",
-            "viral"
-
+            "moon",
+            "alpha",
+            "100x",
+            "degen",
+            "launch",
+            "gem",
+            "sniper",
+            "rocket",
+            "agi"
         ]
 
+        results = []
+
         # =========================
-        # 🧠 DEDUPE MEMORY
+        # 🧠 INSTITUTIONAL DEDUPE ENGINE
         # =========================
 
         best_symbols = {}
 
         # =========================
-        # 🔎 SEARCH ENGINE
+        # 🔍 MAIN LOOP
         # =========================
 
         for keyword in keywords:
@@ -142,11 +124,8 @@ def scan():
             try:
 
                 response = requests.get(
-
                     f"https://api.dexscreener.com/latest/dex/search/?q={keyword}",
-
-                    timeout=15,
-
+                    timeout=20,
                     headers={
                         "User-Agent": "Mozilla/5.0"
                     }
@@ -163,54 +142,83 @@ def scan():
 
                     try:
 
-                        chain = pair.get(
-                            "chainId",
-                            ""
+                        chain = str(
+                            pair.get("chainId", "")
                         ).lower()
 
                         if chain != "solana":
                             continue
 
-                        base_token = pair.get(
-                            "baseToken",
-                            {}
-                        )
-
-                        symbol = base_token.get(
-                            "symbol",
-                            ""
+                        symbol = str(
+                            pair.get(
+                                "baseToken",
+                                {}
+                            ).get(
+                                "symbol",
+                                ""
+                            )
                         ).upper()
 
-                        if not symbol:
+                        # =========================
+                        # 🚫 BAD SYMBOL FILTER
+                        # =========================
+
+                        if (
+                            len(symbol) < 2
+                            or len(symbol) > 12
+                        ):
+                            continue
+
+                        if symbol in [
+                            "USDC",
+                            "USDT",
+                            "WETH",
+                            "WBTC"
+                        ]:
                             continue
 
                         price = float(
-                            pair.get("priceUsd", 0)
+                            pair.get(
+                                "priceUsd",
+                                0
+                            ) or 0
                         )
 
                         change = float(
                             pair.get(
                                 "priceChange",
                                 {}
-                            ).get("h24", 0)
+                            ).get(
+                                "h24",
+                                0
+                            ) or 0
                         )
 
                         liquidity = float(
                             pair.get(
                                 "liquidity",
                                 {}
-                            ).get("usd", 0)
+                            ).get(
+                                "usd",
+                                0
+                            ) or 0
                         )
 
                         volume = float(
                             pair.get(
                                 "volume",
                                 {}
-                            ).get("h24", 0)
+                            ).get(
+                                "h24",
+                                0
+                            ) or 0
                         )
 
                         fdv = float(
-                            pair.get("fdv", 0)
+                            pair.get(
+                                "fdv",
+                                0
+                            ) or 0
                         )
 
                         pair_address = pair.get(
@@ -218,12 +226,17 @@ def scan():
                             ""
                         )
 
+                        pair_created = pair.get(
+                            "pairCreatedAt",
+                            0
+                        )
+
                         dex_url = (
                             f"https://dexscreener.com/solana/{pair_address}"
                         )
 
                         # =========================
-                        # 🚨 HARD FILTERS
+                        # 🚫 FILTERS
                         # =========================
 
                         if liquidity < 10000:
@@ -232,34 +245,39 @@ def scan():
                         if volume < 100:
                             continue
 
-                        # =========================
-                        # 🚀 REAL NEW TOKEN DETECTION
-                        # =========================
+                        if fdv <= 0:
+                            fdv = liquidity * 10
 
-                        pair_created = pair.get(
-                            "pairCreatedAt",
-                            0
-                        )
+                        # =========================
+                        # 🕒 TOKEN AGE
+                        # =========================
 
                         age_minutes = 999999
 
                         if pair_created:
 
                             age_minutes = (
-                                time.time() -
-                                (pair_created / 1000)
+                                time.time() - (
+                                    pair_created / 1000
+                                )
                             ) / 60
 
+                        age_hours = round(
+                            age_minutes / 60,
+                            1
+                        )
+
+                        # =========================
+                        # 🚀 NEW TOKEN DETECTION
+                        # =========================
+
                         if age_minutes <= 360:
-
                             token_type = "NEW"
-
                         else:
-
                             token_type = "TRENDING"
 
                         # =========================
-                        # 🧠 AI SNIPER SCORE
+                        # 🧠 AI SCORE ENGINE
                         # =========================
 
                         score = 0
@@ -269,10 +287,10 @@ def scan():
                             score += 30
 
                         if liquidity > 100000:
-                            score += 40
+                            score += 50
 
                         if liquidity > 500000:
-                            score += 50
+                            score += 70
 
                         # volume
                         if volume > 10000:
@@ -282,80 +300,61 @@ def scan():
                             score += 50
 
                         if volume > 500000:
-                            score += 70
+                            score += 90
 
                         # momentum
                         if change > 5:
-                            score += 40
+                            score += 30
 
                         if change > 20:
-                            score += 80
-
-                        if change > 50:
-                            score += 120
-
-                        # early sniper opportunity
-                        if (
-                            volume > liquidity
-                            and liquidity < 200000
-                        ):
-                            score += 80
-
-                        # ultra early launches
-                        if age_minutes <= 30:
-                            score += 120
-
-                        elif age_minutes <= 120:
                             score += 60
 
-                        # viral explosion
-                        if (
-                            volume > liquidity * 3
-                        ):
-                            score += 150
+                        if change > 100:
+                            score += 120
 
-                        # fdv intelligence
+                        # age boost
+                        if age_minutes <= 360:
+                            score += 100
+
+                        if age_minutes <= 120:
+                            score += 120
+
+                        # fdv
                         if fdv > 1000000:
                             score += 20
 
                         # =========================
-                        # 🧠 AI CONFIDENCE ENGINE
+                        # 🐋 WHALE DETECTION
                         # =========================
 
-                        confidence = 50
+                        whale_status = "NONE"
 
-                        if change > 5:
-                            confidence += 10
+                        if (
+                            liquidity > 100000
+                            and volume > 100000
+                        ):
 
-                        if change > 15:
-                            confidence += 15
+                            whale_status = "🐋 WHALE BUYING"
 
-                        if change > 40:
-                            confidence += 20
-
-                        if liquidity > 50000:
-                            confidence += 10
-
-                        if liquidity > 250000:
-                            confidence += 10
-
-                        if volume > liquidity:
-                            confidence += 15
-
-                        if volume > liquidity * 3:
-                            confidence += 20
-
-                        if age_minutes <= 60:
-                            confidence += 10
-
-                        if confidence > 99:
-                            confidence = 99
+                            score += 40
 
                         # =========================
-                        # 🚨 RATING ENGINE
+                        # 🎯 CONFIDENCE
                         # =========================
 
-                        if score >= 800:
+                        confidence = min(
+                            99,
+                            max(
+                                50,
+                                int(score / 5)
+                            )
+                        )
+
+                        # =========================
+                        # 🚨 RATING
+                        # =========================
+
+                        if score >= 600:
 
                             rating = "👑 GOD CANDLE"
                             signal = "ULTRA SEND"
@@ -391,42 +390,23 @@ def scan():
                             signal = "NO"
 
                         # =========================
-                        # 🛡️ RISK ENGINE
+                        # 🛡️ RISK
                         # =========================
 
                         if liquidity > 100000:
-
                             risk = "LOW"
 
                         elif liquidity > 40000:
-
                             risk = "MEDIUM"
 
                         else:
-
                             risk = "HIGH"
 
                         # =========================
-                        # 🐋 WHALE ACTIVITY
+                        # ⚡ JUPITER CHECK
                         # =========================
 
-                        whale_score = random.randint(0, 100)
-
-                        if whale_score > 80:
-
-                            whale_signal = "🐋 WHALE BUYING"
-
-                        elif whale_score > 60:
-
-                            whale_signal = "👀 SMART MONEY"
-
-                        else:
-
-                            whale_signal = "NONE"
-
-                        # =========================
-                        # 📦 COIN OBJECT
-                        # =========================
+                        jupiter = get_jupiter_quote()
 
                         coin_data = {
 
@@ -444,24 +424,29 @@ def scan():
 
                             "score": score,
 
-                            "confidence": confidence,
-
-                            "whale_signal": whale_signal,
-
-                            "age_minutes": round(age_minutes, 1),
-
                             "rating": rating,
 
                             "risk": risk,
 
                             "signal": signal,
 
-                            "url": dex_url
+                            "confidence": f"{confidence}%",
 
+                            "whales": whale_status,
+
+                            "age": f"{age_hours}h",
+
+                            "url": dex_url,
+
+                            "jupiter": (
+                                "ONLINE"
+                                if "error" not in jupiter
+                                else "OFFLINE"
+                            )
                         }
 
                         # =========================
-                        # 🧠 INSTITUTIONAL DEDUPE ENGINE
+                        # 🧠 INSTITUTIONAL DEDUPE
                         # =========================
 
                         symbol_key = symbol.upper()
@@ -471,11 +456,9 @@ def scan():
                         )
 
                         market_strength = (
-
-                            liquidity +
-                            volume +
-                            (score * 1000)
-
+                            liquidity
+                            + volume
+                            + (score * 1000)
                         )
 
                         coin_data[
@@ -495,7 +478,11 @@ def scan():
                                 0
                             )
 
-                            if market_strength > existing_strength:
+                            # keep strongest pair only
+                            if (
+                                market_strength
+                                > existing_strength
+                            ):
 
                                 best_symbols[
                                     symbol_key
@@ -515,27 +502,24 @@ def scan():
             best_symbols.values()
         )
 
+        # remove helper field
+        for r in results:
+
+            if "market_strength" in r:
+                del r["market_strength"]
+
+        # sort
         results = sorted(
-
             results,
-
             key=lambda x: x["score"],
-
             reverse=True
-
         )
 
+        # limit
         results = results[:15]
 
-        # =========================
-        # 🚀 SNIPER ENGINE
-        # =========================
-
+        # sniper engine
         sniper_pairs = discover_new_pairs()
-
-        # =========================
-        # 💾 CACHE SAVE
-        # =========================
 
         scanner_cache = results
         sniper_cache = sniper_pairs
@@ -545,6 +529,7 @@ def scan():
         return JSONResponse(content={
 
             "scanner": results,
+
             "new_pairs": sniper_pairs
 
         })
@@ -556,7 +541,9 @@ def scan():
         return JSONResponse(content={
 
             "scanner": scanner_cache,
+
             "new_pairs": sniper_cache,
+
             "error": str(e)
 
         })
