@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 export default function Home() {
 
   const [coins, setCoins] = useState([]);
-  const [status, setStatus] = useState("Loading AI sniper...");
+  const [status, setStatus] = useState(
+    "Loading sniper engine..."
+  );
+
   const [loading, setLoading] = useState(false);
 
   async function loadScanner() {
@@ -18,19 +21,15 @@ export default function Home() {
 
       const data = await res.json();
 
-      if (data.scanner) {
+      const scannerData = data.scanner || [];
 
-        setCoins(data.scanner);
+      setCoins(scannerData);
 
-        setStatus(
-          `🔥 Live Sniper AI • ${data.scanner.length} tokens`
-        );
+      setStatus(
+        `🔥 Live Sniper AI • ${scannerData.length} tokens`
+      );
 
-      } else {
-
-        setStatus("Invalid backend response");
-
-      }
+      setLoading(false);
 
     } catch (err) {
 
@@ -38,10 +37,7 @@ export default function Home() {
 
       setStatus("Backend connection failed");
 
-    } finally {
-
       setLoading(false);
-
     }
   }
 
@@ -51,7 +47,7 @@ export default function Home() {
 
     const interval = setInterval(
       loadScanner,
-      15000
+      30000
     );
 
     return () => clearInterval(interval);
@@ -66,7 +62,7 @@ export default function Home() {
         background: "#050505",
         color: "#fff",
         minHeight: "100vh",
-        fontFamily: "Arial"
+        overflowX: "auto"
       }}
     >
 
@@ -74,199 +70,145 @@ export default function Home() {
         🚀 CRYPTO SCANNER
       </h1>
 
-      <p
-        style={{
-          color: "#00ffaa",
-          fontWeight: "bold"
-        }}
-      >
+      <p style={{ color: "#00ffaa" }}>
         {status}
       </p>
 
-      <p
-        style={{
-          color: "#888"
-        }}
-      >
+      <p style={{ color: "#999" }}>
         ⚡ AI engine online
       </p>
 
       {loading && (
 
-        <p
-          style={{
-            color: "#ffaa00"
-          }}
-        >
-          Updating live market data...
+        <p style={{ color: "#666" }}>
+          Syncing live market data...
         </p>
 
       )}
 
-      <div
+      <table
         style={{
-          overflowX: "auto"
+          width: "100%",
+          marginTop: 20,
+          borderCollapse: "collapse"
         }}
       >
 
-        <table
-          style={{
-            width: "100%",
-            marginTop: 20,
-            borderCollapse: "collapse"
-          }}
-        >
+        <thead>
 
-          <thead>
+          <tr>
 
-            <tr
-              style={{
-                background: "#111"
-              }}
-            >
+            <th>Type</th>
+            <th>Token</th>
+            <th>Price</th>
+            <th>24h %</th>
+            <th>Liquidity</th>
+            <th>Volume</th>
+            <th>Score</th>
+            <th>Rating</th>
+            <th>Risk</th>
+            <th>Signal</th>
+            <th>Confidence</th>
+            <th>Whales</th>
+            <th>Age</th>
 
-              <th>Type</th>
-              <th>Token</th>
-              <th>Price</th>
-              <th>24h %</th>
-              <th>Liquidity</th>
-              <th>Volume</th>
-              <th>Score</th>
-              <th>Rating</th>
-              <th>Risk</th>
-              <th>Signal</th>
-              <th>Confidence</th>
-              <th>Whales</th>
-              <th>Age</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {coins.map((coin, i) => (
+
+            <tr key={i}>
+
+              <td>
+                {coin.type}
+              </td>
+
+              <td>
+
+                <a
+                  href={coin.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    color: "#00ffaa",
+                    textDecoration: "none"
+                  }}
+                >
+                  {coin.name}
+                </a>
+
+              </td>
+
+              <td>
+                $
+                {Number(
+                  coin.price || 0
+                ).toLocaleString()}
+              </td>
+
+              <td
+                style={{
+                  color:
+                    coin.change >= 0
+                      ? "#00ff99"
+                      : "red"
+                }}
+              >
+                {coin.change}%
+              </td>
+
+              <td>
+                $
+                {Number(
+                  coin.liquidity || 0
+                ).toLocaleString()}
+              </td>
+
+              <td>
+                $
+                {Number(
+                  coin.volume || 0
+                ).toLocaleString()}
+              </td>
+
+              <td>
+                <b>{coin.score}</b>
+              </td>
+
+              <td>
+                {coin.rating}
+              </td>
+
+              <td>
+                <b>{coin.risk}</b>
+              </td>
+
+              <td>
+                {coin.signal}
+              </td>
+
+              <td>
+                {coin.confidence}
+              </td>
+
+              <td>
+                {coin.whales}
+              </td>
+
+              <td>
+                {coin.age}
+              </td>
 
             </tr>
 
-          </thead>
+          ))}
 
-          <tbody>
+        </tbody>
 
-            {coins.map((coin, i) => (
-
-              <tr
-                key={i}
-                style={{
-                  borderBottom: "1px solid #222"
-                }}
-              >
-
-                <td>{coin.type}</td>
-
-                <td>
-
-                  <a
-                    href={coin.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      color: "#00ccff",
-                      textDecoration: "none",
-                      fontWeight: "bold"
-                    }}
-                  >
-                    {coin.name}
-                  </a>
-
-                </td>
-
-                <td>
-
-                  {coin.price > 0
-
-                    ? `$${Number(
-                        coin.price
-                      ).toLocaleString()}`
-
-                    : "$0"}
-
-                </td>
-
-                <td
-                  style={{
-                    color:
-                      coin.change >= 0
-                        ? "#00ff99"
-                        : "red"
-                  }}
-                >
-                  {coin.change}%
-                </td>
-
-                <td>
-                  $
-                  {Number(
-                    coin.liquidity
-                  ).toLocaleString()}
-                </td>
-
-                <td>
-                  $
-                  {Number(
-                    coin.volume
-                  ).toLocaleString()}
-                </td>
-
-                <td>
-                  <b>{coin.score}</b>
-                </td>
-
-                <td>{coin.rating}</td>
-
-                <td>
-                  <b>{coin.risk}</b>
-                </td>
-
-                <td>{coin.signal}</td>
-
-                <td>
-
-                  <span
-                    style={{
-                      color:
-                        coin.confidence >= 85
-                          ? "#00ff99"
-                          : coin.confidence >= 70
-                          ? "#ffaa00"
-                          : "#888"
-                    }}
-                  >
-                    {coin.confidence}%
-                  </span>
-
-                </td>
-
-                <td>
-
-                  {coin.whale_signal}
-
-                </td>
-
-                <td>
-
-                  {coin.age_minutes < 60
-
-                    ? `${coin.age_minutes}m`
-
-                    : `${(
-                        coin.age_minutes / 60
-                      ).toFixed(1)}h`
-                  }
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
+      </table>
 
     </div>
   );
