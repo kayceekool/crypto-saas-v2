@@ -3,7 +3,7 @@ async function loadScanner() {
     try {
 
         const response = await fetch(
-            "https://YOUR-BACKEND-URL/scan"
+            "https://https://crypto-saas-v2.onrender.com/scan"
         );
 
         const data = await response.json();
