@@ -5,22 +5,6 @@ from fastapi.responses import JSONResponse
 import requests
 import time
 
-# =========================
-# 🚀 IMPORTS
-# =========================
-
-try:
-    from sniper_engine import discover_new_pairs
-except:
-    def discover_new_pairs():
-        return []
-
-try:
-    from exchanges.jupiter import get_jupiter_quote
-except:
-    def get_jupiter_quote():
-        return {"error": "offline"}
-
 app = FastAPI()
 
 # =========================
@@ -44,44 +28,19 @@ sniper_cache = []
 last_update = 0
 
 # =========================
-# 🔥 SMART KEYWORDS
-# =========================
-
-keywords = [
-    "pump",
-    "ai",
-    "sniper",
-    "launch",
-    "degen",
-    "moon",
-    "alpha",
-    "agi",
-    "meme",
-    "cat",
-    "dog",
-    "wojak",
-    "bonk",
-    "pepe",
-    "sol"
-]
-
-# =========================
 # 🏦 ROOT
 # =========================
 
 @app.get("/")
 def home():
-
     return {
-        "status": "HEDGE_FUND_SAAS_RUNNING",
+        "status": "ONLINE",
         "scanner": "ACTIVE",
-        "sniper_engine": "ACTIVE",
-        "dex": "JUPITER_ENABLED",
-        "version": "INSTITUTIONAL_AI_V5"
+        "ai_engine": "RUNNING"
     }
 
 # =========================
-# ⚡ MAIN SCANNER
+# 🚀 MAIN SCANNER
 # =========================
 
 @app.get("/scan")
@@ -92,23 +51,38 @@ def scan():
     global last_update
 
     # =========================
-    # ⚡ CACHE SYSTEM
+    # ⚡ CACHE STABILIZER
     # =========================
 
-    if scanner_cache and time.time() - last_update < 45:
-
+    if scanner_cache and time.time() - last_update < 20:
         return JSONResponse(content={
             "scanner": scanner_cache,
-            "new_pairs": sniper_cache,
-            "cached": True
+            "new_pairs": sniper_cache
         })
 
     try:
 
+        keywords = [
+            "wojak",
+            "pepe",
+            "bonk",
+            "pump",
+            "meme",
+            "ai",
+            "degen",
+            "launch",
+            "moon",
+            "100x",
+            "sniper",
+            "alpha",
+            "agi"
+        ]
+
+        results = []
         best_symbols = {}
 
         # =========================
-        # 🔍 MAIN LOOP
+        # 🔍 SEARCH LOOP
         # =========================
 
         for keyword in keywords:
@@ -146,18 +120,6 @@ def scan():
                         if not symbol:
                             continue
 
-                        symbol = symbol.upper().strip()
-
-                        # =========================
-                        # 🚫 IGNORE BAD SYMBOLS
-                        # =========================
-
-                        if len(symbol) > 15:
-                            continue
-
-                        if symbol in ["UNKNOWN", "???"]:
-                            continue
-
                         price = float(pair.get("priceUsd", 0) or 0)
 
                         change = float(
@@ -180,47 +142,33 @@ def scan():
                             f"https://dexscreener.com/solana/{pair_address}"
                         )
 
-                        pair_created = pair.get("pairCreatedAt", 0)
+                        # =========================
+                        # 🚀 AGE ENGINE
+                        # =========================
 
-                        # =========================
-                        # ⏳ AGE ENGINE
-                        # =========================
+                        pair_created = pair.get("pairCreatedAt", 0)
 
                         age_hours = 999999
 
                         if pair_created:
+                            age_hours = (
+                                time.time() - (pair_created / 1000)
+                            ) / 3600
 
-                            age_hours = round(
-                                (
-                                    time.time() - (pair_created / 1000)
-                                ) / 3600,
-                                1
-                            )
+                        token_type = (
+                            "NEW"
+                            if age_hours <= 6
+                            else "TRENDING"
+                        )
 
                         # =========================
-                        # 🚨 MINIMUM FILTERS
+                        # 🚨 BASIC FILTERS
                         # =========================
 
                         if liquidity < 10000:
                             continue
 
                         if volume < 100:
-                            continue
-
-                        # =========================
-                        # 🚫 RUG FILTERS
-                        # =========================
-
-                        # suspicious fake pools
-                        if liquidity > 500000 and volume < 500:
-                            continue
-
-                        # fake manipulated giga pumps
-                        if change > 50000 and liquidity < 20000:
-                            continue
-
-                        # dead liquidity pools
-                        if volume < liquidity * 0.0001:
                             continue
 
                         # =========================
@@ -234,83 +182,116 @@ def scan():
                             score += 40
 
                         if liquidity > 100000:
-                            score += 50
+                            score += 60
 
                         if liquidity > 500000:
-                            score += 60
+                            score += 80
 
                         # volume
-                        if volume > 10000:
-                            score += 40
+                        if volume > 25000:
+                            score += 50
 
                         if volume > 100000:
-                            score += 60
-
-                        if volume > 500000:
                             score += 80
 
-                        # price momentum
+                        if volume > 1000000:
+                            score += 120
+
+                        # momentum
                         if change > 5:
-                            score += 40
+                            score += 50
 
-                        if change > 25:
-                            score += 80
+                        if change > 20:
+                            score += 120
 
                         if change > 100:
-                            score += 140
-
-                        # =========================
-                        # 🚀 EARLY EXPLOSION DETECTOR
-                        # =========================
-
-                        if (
-                            age_hours <= 6 and
-                            volume > liquidity and
-                            change > 40
-                        ):
-                            score += 200
-
-                        if (
-                            age_hours <= 3 and
-                            volume > liquidity * 2
-                        ):
                             score += 250
 
-                        if change > 500:
-                            score += 240
+                        # new token bonus
+                        if age_hours <= 6:
+                            score += 180
 
-                        # fdv
-                        if fdv > 100000:
-                            score += 20
+                        if age_hours <= 2:
+                            score += 220
 
+                        # fdv sanity
                         if fdv > 1000000:
                             score += 40
 
-                        # young token bonus
-                        if age_hours <= 6:
-                            score += 120
+                        # =========================
+                        # 🚀 VIRALITY ENGINE
+                        # =========================
 
-                        elif age_hours <= 24:
-                            score += 80
+                        virality = "NORMAL"
 
-                        elif age_hours <= 72:
-                            score += 40
-
-                        # volume vs liquidity
                         if volume > liquidity:
-                            score += 40
+                            score += 70
+                            virality = "TRENDING"
+
+                        if volume > liquidity * 3:
+                            score += 150
+                            virality = "VIRAL"
+
+                        if volume > liquidity * 8:
+                            score += 300
+                            virality = "EXPLODING"
+
+                        # =========================
+                        # 🐋 SMART MONEY ENGINE
+                        # =========================
+
+                        whales = "NONE"
+
+                        if volume > liquidity * 0.8:
+                            whales = "🐋 WHALE BUYING"
+                            score += 50
 
                         if volume > liquidity * 2:
-                            score += 80
+                            whales = "🐋 SMART MONEY"
+                            score += 120
 
                         # =========================
-                        # 🚀 TOKEN TYPE
+                        # 🧠 CONFIDENCE ENGINE
                         # =========================
 
-                        if age_hours <= 6:
-                            token_type = "NEW"
+                        confidence = 50
+
+                        if score > 150:
+                            confidence = 70
+
+                        if score > 300:
+                            confidence = 85
+
+                        if score > 500:
+                            confidence = 99
+
+                        # =========================
+                        # ⚡ SIGNAL ENGINE
+                        # =========================
+
+                        if score >= 900:
+                            rating = "👑 GOD CANDLE"
+                            signal = "ULTRA SEND"
+
+                        elif score >= 500:
+                            rating = "🚀 PARABOLIC"
+                            signal = "PARABOLIC"
+
+                        elif score >= 250:
+                            rating = "💎 GEM"
+                            signal = "SNIPER ENTRY"
+
+                        elif score >= 150:
+                            rating = "🔥 HOT"
+                            signal = "BUY"
+
+                        elif score >= 80:
+                            rating = "🚀 GOOD"
+                            signal = "NO"
+
                         else:
-                            token_type = "TRENDING"
+                            rating = "⚠️ RISKY"
+                            signal = "NO"
 
                         # =========================
                         # 🛡️ RISK ENGINE
@@ -326,81 +307,23 @@ def scan():
                             risk = "HIGH"
 
                         # =========================
-                        # 🚀 SIGNAL ENGINE
+                        # 🧠 AI ENTRY ENGINE
                         # =========================
 
-                        if score >= 500:
-                            signal = "PARABOLIC"
-
-                        elif score >= 250:
-                            signal = "SNIPER ENTRY"
-
-                        elif score >= 150:
-                            signal = "BUY"
-
-                        else:
-                            signal = "NO"
-
-                        # =========================
-                        # 🏆 RATING ENGINE
-                        # =========================
-
-                        if score >= 500:
-                            rating = "🚀 PARABOLIC"
-
-                        elif score >= 250:
-                            rating = "💎 GEM"
-
-                        elif score >= 150:
-                            rating = "🔥 HOT"
-
-                        elif score >= 80:
-                            rating = "🚀 GOOD"
-
-                        else:
-                            rating = "⚠️ RISKY"
-
-                        # =========================
-                        # 🐋 WHALE ENGINE
-                        # =========================
-
-                        if volume > liquidity * 3:
-                            whales = "🐋 AGGRESSIVE WHALES"
-
-                        elif volume > liquidity * 1.5:
-                            whales = "🐋 WHALE BUYING"
-
-                        else:
-                            whales = "NONE"
-
-                        # =========================
-                        # 📈 CONFIDENCE ENGINE
-                        # =========================
-
-                        confidence = 50
-
-                        if score >= 150:
-                            confidence = 70
+                        entry_zone = "WAIT"
 
                         if score >= 250:
-                            confidence = 85
+                            entry_zone = "SNIPER ZONE"
 
-                        if score >= 400:
-                            confidence = 99
+                        if score >= 500:
+                            entry_zone = "EARLY BREAKOUT"
 
-                        # =========================
-                        # ⚡ JUPITER STATUS
-                        # =========================
-
-                        jupiter = get_jupiter_quote()
-
-                        # =========================
-                        # 🧠 COIN DATA
-                        # =========================
+                        if score >= 900:
+                            entry_zone = "FULL SEND"
 
                         coin_data = {
                             "type": token_type,
-                            "name": symbol,
+                            "name": symbol.upper(),
                             "price": round(price, 8),
                             "change": round(change, 2),
                             "liquidity": round(liquidity, 2),
@@ -411,13 +334,10 @@ def scan():
                             "signal": signal,
                             "confidence": f"{confidence}%",
                             "whales": whales,
-                            "age": f"{age_hours}h",
-                            "url": dex_url,
-                            "jupiter": (
-                                "ONLINE"
-                                if "error" not in jupiter
-                                else "OFFLINE"
-                            )
+                            "age": f"{round(age_hours, 1)}h",
+                            "virality": virality,
+                            "entry": entry_zone,
+                            "url": dex_url
                         }
 
                         # =========================
@@ -425,8 +345,6 @@ def scan():
                         # =========================
 
                         symbol_key = symbol.upper()
-
-                        existing = best_symbols.get(symbol_key)
 
                         market_strength = (
                             liquidity +
@@ -436,9 +354,9 @@ def scan():
 
                         coin_data["market_strength"] = market_strength
 
-                        # keep only strongest pair
-                        if existing is None:
+                        existing = best_symbols.get(symbol_key)
 
+                        if existing is None:
                             best_symbols[symbol_key] = coin_data
 
                         else:
@@ -449,7 +367,6 @@ def scan():
                             )
 
                             if market_strength > existing_strength:
-
                                 best_symbols[symbol_key] = coin_data
 
                     except:
@@ -459,7 +376,7 @@ def scan():
                 continue
 
         # =========================
-        # 🚀 FINAL SANITIZED LIST
+        # 📊 FINALIZE
         # =========================
 
         results = list(best_symbols.values())
@@ -470,29 +387,19 @@ def scan():
             reverse=True
         )
 
-        # keep dashboard clean
         results = results[:15]
 
-        # =========================
-        # 🚀 SNIPER ENGINE
-        # =========================
-
-        sniper_pairs = discover_new_pairs()
-
         scanner_cache = results
-        sniper_cache = sniper_pairs
+        sniper_cache = []
 
         last_update = time.time()
 
         return JSONResponse(content={
             "scanner": results,
-            "new_pairs": sniper_pairs,
-            "cached": False
+            "new_pairs": sniper_cache
         })
 
     except Exception as e:
-
-        print("SCAN ERROR:", str(e))
 
         return JSONResponse(content={
             "scanner": scanner_cache,
