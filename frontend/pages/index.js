@@ -1,132 +1,73 @@
-// =========================
-// 🚀 FULL UPGRADED index.js
-// =========================
+const API_URL =
+  "https://crypto-saas-v2.onrender.com/api/tokens";
 
-async function loadScanner() {
+async function loadTokens() {
 
-    try {
+  try {
 
-        document.getElementById(
-            "status"
-        ).innerHTML =
-            "Syncing live market data...";
+    document.getElementById(
+      "status"
+    ).innerHTML =
+      "⚡ Predictive Sniper AI Online";
 
-        const response = await fetch(
-            "https://crypto-saas-v2.onrender.com/scan"
-        );
+    const response = await fetch(API_URL);
 
-        const data = await response.json();
+    const data = await response.json();
 
-        const scanner = data.scanner || [];
+    const table =
+      document.getElementById("tokenTable");
 
-        let html = `
+    table.innerHTML = "";
 
-        <h1>🚀 CRYPTO SCANNER</h1>
+    data.forEach((coin) => {
 
-        <p>
-            🔥 Live Sniper AI •
-            ${scanner.length} tokens
-        </p>
+      table.innerHTML += `
+        <tr>
+          <td>${coin.type}</td>
 
-        <p>⚡ AI engine online</p>
+          <td>
+            <a href="${coin.url}"
+               target="_blank">
+               ${coin.symbol}
+            </a>
+          </td>
 
-        <table>
+          <td>$${coin.price}</td>
 
-            <tr>
+          <td>${coin.priceChange}%</td>
 
-                <th>Type</th>
-                <th>Token</th>
-                <th>Price</th>
-                <th>24h %</th>
-                <th>Liquidity</th>
-                <th>Volume</th>
-                <th>Score</th>
-                <th>Rating</th>
-                <th>Risk</th>
-                <th>Signal</th>
-                <th>Confidence</th>
-                <th>Whales</th>
-                <th>Age</th>
-                <th>Trend</th>
-                <th>Virality</th>
-                <th>Entry</th>
+          <td>$${coin.liquidity}</td>
 
-            </tr>
-        `;
+          <td>$${coin.volume}</td>
 
-        scanner.forEach(token => {
+          <td><b>${coin.score}</b></td>
 
-            html += `
+          <td>${coin.rating}</td>
 
-            <tr>
+          <td><b>${coin.risk}</b></td>
 
-                <td>${token.type}</td>
+          <td>${coin.signal}</td>
 
-                <td>
-                    <a href="${token.url}"
-                       target="_blank">
+          <td>${coin.confidence}</td>
 
-                        ${token.name}
+          <td>${coin.whales}</td>
 
-                    </a>
-                </td>
+          <td>${coin.age}</td>
+        </tr>
+      `;
+    });
 
-                <td>$${token.price}</td>
+  } catch (err) {
 
-                <td>${token.change}%</td>
+    console.log(err);
 
-                <td>$${token.liquidity}</td>
-
-                <td>$${token.volume}</td>
-
-                <td><b>${token.score}</b></td>
-
-                <td>${token.rating}</td>
-
-                <td><b>${token.risk}</b></td>
-
-                <td>${token.signal}</td>
-
-                <td>${token.confidence}</td>
-
-                <td>${token.whales}</td>
-
-                <td>${token.age}</td>
-
-                <td>${token.trend}</td>
-
-                <td>${token.virality}</td>
-
-                <td>${token.entry}</td>
-
-            </tr>
-            `;
-        });
-
-        html += `</table>`;
-
-        document.getElementById(
-            "app"
-        ).innerHTML = html;
-
-        document.getElementById(
-            "status"
-        ).innerHTML =
-            "✅ Live scanner stable";
-
-    } catch (err) {
-
-        document.getElementById(
-            "status"
-        ).innerHTML =
-            "⚠️ Backend connection failed";
-    }
+    document.getElementById(
+      "status"
+    ).innerHTML =
+      "❌ Backend connection failed";
+  }
 }
 
-loadScanner();
+loadTokens();
 
-setInterval(() => {
-
-    loadScanner();
-
-}, 15000);
+setInterval(loadTokens, 15000);
