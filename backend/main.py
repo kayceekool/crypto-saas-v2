@@ -1,3 +1,7 @@
+# =========================
+# 🚀 FULL UPGRADED main.py
+# =========================
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -33,6 +37,7 @@ last_update = 0
 
 @app.get("/")
 def home():
+
     return {
         "status": "ONLINE",
         "scanner": "ACTIVE",
@@ -51,10 +56,14 @@ def scan():
     global last_update
 
     # =========================
-    # ⚡ CACHE STABILIZER
+    # ⚡ CACHE
     # =========================
 
-    if scanner_cache and time.time() - last_update < 20:
+    if (
+        scanner_cache and
+        time.time() - last_update < 20
+    ):
+
         return JSONResponse(content={
             "scanner": scanner_cache,
             "new_pairs": sniper_cache
@@ -78,7 +87,6 @@ def scan():
             "agi"
         ]
 
-        results = []
         best_symbols = {}
 
         # =========================
@@ -108,35 +116,60 @@ def scan():
 
                     try:
 
-                        chain = pair.get("chainId", "").lower()
+                        chain = pair.get(
+                            "chainId",
+                            ""
+                        ).lower()
 
                         if chain != "solana":
                             continue
 
-                        base = pair.get("baseToken", {})
+                        base = pair.get(
+                            "baseToken",
+                            {}
+                        )
 
-                        symbol = base.get("symbol", "UNKNOWN")
+                        symbol = base.get(
+                            "symbol",
+                            "UNKNOWN"
+                        )
 
                         if not symbol:
                             continue
 
-                        price = float(pair.get("priceUsd", 0) or 0)
+                        price = float(
+                            pair.get("priceUsd", 0) or 0
+                        )
 
                         change = float(
-                            pair.get("priceChange", {}).get("h24", 0) or 0
+                            pair.get(
+                                "priceChange",
+                                {}
+                            ).get("h24", 0) or 0
                         )
 
                         liquidity = float(
-                            pair.get("liquidity", {}).get("usd", 0) or 0
+                            pair.get(
+                                "liquidity",
+                                {}
+                            ).get("usd", 0) or 0
                         )
 
                         volume = float(
-                            pair.get("volume", {}).get("h24", 0) or 0
+                            pair.get(
+                                "volume",
+                                {}
+                            ).get("h24", 0) or 0
                         )
 
-                        fdv = float(pair.get("fdv", 0) or 0)
+                        fdv = float(
+                            pair.get("fdv", 0) or 0
+                        )
 
-                        pair_address = pair.get("pairAddress", "")
+                        pair_address = pair.get(
+                            "pairAddress",
+                            ""
+                        )
 
                         dex_url = (
                             f"https://dexscreener.com/solana/{pair_address}"
@@ -146,13 +179,18 @@ def scan():
                         # 🚀 AGE ENGINE
                         # =========================
 
-                        pair_created = pair.get("pairCreatedAt", 0)
+                        pair_created = pair.get(
+                            "pairCreatedAt",
+                            0
+                        )
 
                         age_hours = 999999
 
                         if pair_created:
+
                             age_hours = (
-                                time.time() - (pair_created / 1000)
+                                time.time() -
+                                (pair_created / 1000)
                             ) / 3600
 
                         token_type = (
@@ -162,7 +200,7 @@ def scan():
                         )
 
                         # =========================
-                        # 🚨 BASIC FILTERS
+                        # 🚨 FILTERS
                         # =========================
 
                         if liquidity < 10000:
@@ -172,12 +210,13 @@ def scan():
                             continue
 
                         # =========================
-                        # 🧠 AI SCORE ENGINE
+                        # 🧠 BASE SCORE
                         # =========================
 
                         score = 0
 
                         # liquidity
+
                         if liquidity > 25000:
                             score += 40
 
@@ -188,6 +227,7 @@ def scan():
                             score += 80
 
                         # volume
+
                         if volume > 25000:
                             score += 50
 
@@ -198,6 +238,7 @@ def scan():
                             score += 120
 
                         # momentum
+
                         if change > 5:
                             score += 50
 
@@ -208,15 +249,34 @@ def scan():
                             score += 250
 
                         # new token bonus
+
                         if age_hours <= 6:
                             score += 180
 
                         if age_hours <= 2:
                             score += 220
 
-                        # fdv sanity
+                        # fdv
+
                         if fdv > 1000000:
                             score += 40
+
+                        # =========================
+                        # 🚀 VELOCITY ENGINE
+                        # =========================
+
+                        velocity_score = 0
+
+                        if volume > liquidity * 0.3:
+                            velocity_score += 40
+
+                        if volume > liquidity * 0.7:
+                            velocity_score += 80
+
+                        if volume > liquidity * 1.5:
+                            velocity_score += 160
+
+                        score += velocity_score
 
                         # =========================
                         # 🚀 VIRALITY ENGINE
@@ -237,7 +297,7 @@ def scan():
                             virality = "EXPLODING"
 
                         # =========================
-                        # 🐋 SMART MONEY ENGINE
+                        # 🐋 SMART MONEY
                         # =========================
 
                         whales = "NONE"
@@ -251,7 +311,39 @@ def scan():
                             score += 120
 
                         # =========================
-                        # 🧠 CONFIDENCE ENGINE
+                        # 🛑 FAKE PUMP FILTER
+                        # =========================
+
+                        dump_penalty = 0
+
+                        if change < -20:
+                            dump_penalty += 80
+
+                        if change < -40:
+                            dump_penalty += 150
+
+                        if liquidity < 20000:
+                            dump_penalty += 60
+
+                        score -= dump_penalty
+
+                        # =========================
+                        # 📈 TREND ENGINE
+                        # =========================
+
+                        trend = "SIDEWAYS"
+
+                        if change > 10:
+                            trend = "BULLISH"
+
+                        if change > 40:
+                            trend = "STRONG BULLISH"
+
+                        if change > 100:
+                            trend = "HYPER BULLISH"
+
+                        # =========================
+                        # 🧠 CONFIDENCE
                         # =========================
 
                         confidence = 50
@@ -270,44 +362,53 @@ def scan():
                         # =========================
 
                         if score >= 900:
+
                             rating = "👑 GOD CANDLE"
                             signal = "ULTRA SEND"
 
                         elif score >= 500:
+
                             rating = "🚀 PARABOLIC"
                             signal = "PARABOLIC"
 
                         elif score >= 250:
+
                             rating = "💎 GEM"
                             signal = "SNIPER ENTRY"
 
                         elif score >= 150:
+
                             rating = "🔥 HOT"
                             signal = "BUY"
 
                         elif score >= 80:
+
                             rating = "🚀 GOOD"
                             signal = "NO"
 
                         else:
+
                             rating = "⚠️ RISKY"
                             signal = "NO"
 
                         # =========================
-                        # 🛡️ RISK ENGINE
+                        # 🛡️ RISK
                         # =========================
 
                         if liquidity > 100000:
+
                             risk = "LOW"
 
                         elif liquidity > 40000:
+
                             risk = "MEDIUM"
 
                         else:
+
                             risk = "HIGH"
 
                         # =========================
-                        # 🧠 AI ENTRY ENGINE
+                        # 🎯 ENTRY ENGINE
                         # =========================
 
                         entry_zone = "WAIT"
@@ -321,27 +422,50 @@ def scan():
                         if score >= 900:
                             entry_zone = "FULL SEND"
 
+                        # =========================
+                        # 📦 COIN DATA
+                        # =========================
+
                         coin_data = {
+
                             "type": token_type,
+
                             "name": symbol.upper(),
+
                             "price": round(price, 8),
+
                             "change": round(change, 2),
+
                             "liquidity": round(liquidity, 2),
+
                             "volume": round(volume, 2),
+
                             "score": score,
+
                             "rating": rating,
+
                             "risk": risk,
+
                             "signal": signal,
+
                             "confidence": f"{confidence}%",
+
                             "whales": whales,
+
                             "age": f"{round(age_hours, 1)}h",
+
                             "virality": virality,
+
                             "entry": entry_zone,
+
+                            "trend": trend,
+
                             "url": dex_url
+
                         }
 
                         # =========================
-                        # 🧠 INSTITUTIONAL DEDUPE
+                        # 🧠 DEDUPE ENGINE
                         # =========================
 
                         symbol_key = symbol.upper()
@@ -352,12 +476,19 @@ def scan():
                             (score * 1000)
                         )
 
-                        coin_data["market_strength"] = market_strength
+                        coin_data[
+                            "market_strength"
+                        ] = market_strength
 
-                        existing = best_symbols.get(symbol_key)
+                        existing = best_symbols.get(
+                            symbol_key
+                        )
 
                         if existing is None:
-                            best_symbols[symbol_key] = coin_data
+
+                            best_symbols[
+                                symbol_key
+                            ] = coin_data
 
                         else:
 
@@ -367,7 +498,10 @@ def scan():
                             )
 
                             if market_strength > existing_strength:
-                                best_symbols[symbol_key] = coin_data
+
+                                best_symbols[
+                                    symbol_key
+                                ] = coin_data
 
                     except:
                         continue
@@ -379,7 +513,9 @@ def scan():
         # 📊 FINALIZE
         # =========================
 
-        results = list(best_symbols.values())
+        results = list(
+            best_symbols.values()
+        )
 
         results = sorted(
             results,
@@ -389,20 +525,33 @@ def scan():
 
         results = results[:15]
 
+        # =========================
+        # 🛡️ STABILITY PATCH
+        # =========================
+
+        if len(results) < 5:
+            results = scanner_cache
+
         scanner_cache = results
-        sniper_cache = []
 
         last_update = time.time()
 
         return JSONResponse(content={
+
             "scanner": results,
+
             "new_pairs": sniper_cache
+
         })
 
     except Exception as e:
 
         return JSONResponse(content={
+
             "scanner": scanner_cache,
+
             "new_pairs": sniper_cache,
+
             "error": str(e)
+
         })
