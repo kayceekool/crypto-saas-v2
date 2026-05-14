@@ -1,73 +1,115 @@
-const API_URL =
-  "https://crypto-saas-v2.onrender.com/api/tokens";
+// ================================
+// 🚀 FULL UPGRADED index.js
+// Upgrades 11 → 22 Integrated
+// ================================
 
-async function loadTokens() {
+const API_URL = "https://your-backend-url.onrender.com/scan";
+
+const tbody = document.getElementById("scannerBody");
+
+const liveStatus = document.getElementById("liveStatus");
+
+// =========================
+// 🔥 LIVE STATUS ENGINE
+// =========================
+
+const statusMessages = [
+  "Scanning whale wallets...",
+  "Tracking smart money...",
+  "Analyzing momentum...",
+  "Filtering fake pumps...",
+  "Monitoring parabolic tokens...",
+  "Detecting sniper entries...",
+  "Syncing live market data...",
+  "AI confidence recalculating...",
+  "Watching liquidity inflows...",
+  "Institutional engine active..."
+];
+
+let statusIndex = 0;
+
+setInterval(() => {
+
+  const el = document.getElementById("liveStatus");
+
+  if (el) {
+
+    el.innerText = statusMessages[statusIndex];
+
+    statusIndex++;
+
+    if (statusIndex >= statusMessages.length) {
+      statusIndex = 0;
+    }
+  }
+
+}, 4000);
+
+// =========================
+// 🚀 RENDER ENGINE
+// =========================
+
+async function loadScanner() {
 
   try {
-
-    document.getElementById(
-      "status"
-    ).innerHTML =
-      "⚡ Predictive Sniper AI Online";
 
     const response = await fetch(API_URL);
 
     const data = await response.json();
 
-    const table =
-      document.getElementById("tokenTable");
+    tbody.innerHTML = "";
 
-    table.innerHTML = "";
+    data.forEach(token => {
 
-    data.forEach((coin) => {
+      const row = document.createElement("tr");
 
-      table.innerHTML += `
-        <tr>
-          <td>${coin.type}</td>
+      row.innerHTML = `
+        <td>${token.type}</td>
 
-          <td>
-            <a href="${coin.url}"
-               target="_blank">
-               ${coin.symbol}
-            </a>
-          </td>
+        <td>
+          <a href="${token.url}" target="_blank">
+            ${token.symbol}
+          </a>
+        </td>
 
-          <td>$${coin.price}</td>
+        <td>$${token.price}</td>
 
-          <td>${coin.priceChange}%</td>
+        <td>${token.priceChange}%</td>
 
-          <td>$${coin.liquidity}</td>
+        <td>$${token.liquidity.toLocaleString()}</td>
 
-          <td>$${coin.volume}</td>
+        <td>$${token.volume.toLocaleString()}</td>
 
-          <td><b>${coin.score}</b></td>
+        <td><b>${token.score}</b></td>
 
-          <td>${coin.rating}</td>
+        <td>${token.rating}</td>
 
-          <td><b>${coin.risk}</b></td>
+        <td>${token.risk}</td>
 
-          <td>${coin.signal}</td>
+        <td>${token.signal}</td>
 
-          <td>${coin.confidence}</td>
+        <td>${token.confidence}%</td>
 
-          <td>${coin.whales}</td>
+        <td>${token.whales}</td>
 
-          <td>${coin.age}</td>
-        </tr>
+        <td>${token.age}</td>
       `;
+
+      tbody.appendChild(row);
+
     });
 
   } catch (err) {
 
     console.log(err);
 
-    document.getElementById(
-      "status"
-    ).innerHTML =
-      "❌ Backend connection failed";
   }
 }
 
-loadTokens();
+// =========================
+// 🚀 AUTO REFRESH
+// =========================
 
-setInterval(loadTokens, 15000);
+loadScanner();
+
+setInterval(loadScanner, 15000);
