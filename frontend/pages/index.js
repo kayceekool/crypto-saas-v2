@@ -3,7 +3,7 @@
 // Upgrades 11 → 22 Integrated
 // ================================
 
-const API_URL = "https://your-backend-url.onrender.com/scan";
+const API_URL = "https://crypto-saas-v2.onrender.com/scan";
 
 const tbody = document.getElementById("scannerBody");
 
