@@ -243,8 +243,12 @@ def scan():
                     (liquidity - memory["liquidity"])
                     / memory["liquidity"]
                 ) * 100
-            except:
-                pass
+            except Exception as e:
+
+    print(
+        "SCAN ERROR:",
+        e
+    )
 
             try:
                 price_growth = (
