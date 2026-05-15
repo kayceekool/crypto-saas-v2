@@ -1,73 +1,113 @@
-// ================================
-// 🚀 FULL UPGRADED index.js
-// Upgrades 11 → 22 Integrated
-// ================================
+// =========================================
+// 🚀 ELITE FRONTEND ENGINE v33
+// =========================================
 
-const API_URL = "https://crypto-saas-v2.onrender.com/scan";
+const API_URL =
+  "https://crypto-saas-v2.onrender.com/scan";
 
-const tbody = document.getElementById("scannerBody");
+const tbody =
+  document.getElementById("scannerBody");
 
-const liveStatus = document.getElementById("liveStatus");
+const liveStatus =
+  document.getElementById("liveStatus");
 
-// =========================
-// 🔥 LIVE STATUS ENGINE
-// =========================
+// =========================================
+// 🔥 STATUS ENGINE
+// =========================================
 
 const statusMessages = [
+
   "Scanning whale wallets...",
+
   "Tracking smart money...",
+
   "Analyzing momentum...",
+
   "Filtering fake pumps...",
-  "Monitoring parabolic tokens...",
+
   "Detecting sniper entries...",
+
+  "Monitoring liquidity inflows...",
+
+  "Institutional AI active...",
+
   "Syncing live market data...",
-  "AI confidence recalculating...",
-  "Watching liquidity inflows...",
-  "Institutional engine active..."
+
+  "Watching meme rotations...",
+
+  "Calculating confidence engine..."
 ];
 
 let statusIndex = 0;
 
 setInterval(() => {
 
-  const el = document.getElementById("liveStatus");
+  if (liveStatus) {
 
-  if (el) {
-
-    el.innerText = statusMessages[statusIndex];
+    liveStatus.innerText =
+      statusMessages[statusIndex];
 
     statusIndex++;
 
-    if (statusIndex >= statusMessages.length) {
+    if (
+      statusIndex >=
+      statusMessages.length
+    ) {
       statusIndex = 0;
     }
   }
 
 }, 4000);
 
-// =========================
-// 🚀 RENDER ENGINE
-// =========================
+// =========================================
+// 🎨 SCORE COLORS
+// =========================================
+
+function getScoreClass(score) {
+
+  if (score >= 900)
+    return "score-god";
+
+  if (score >= 650)
+    return "score-para";
+
+  if (score >= 350)
+    return "score-gem";
+
+  return "score-normal";
+}
+
+// =========================================
+// 🚀 LOAD SCANNER
+// =========================================
 
 async function loadScanner() {
 
   try {
 
-    const response = await fetch(API_URL);
+    const response =
+      await fetch(API_URL);
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
     tbody.innerHTML = "";
 
     data.forEach(token => {
 
-      const row = document.createElement("tr");
+      const row =
+        document.createElement("tr");
+
+      const scoreClass =
+        getScoreClass(token.score);
 
       row.innerHTML = `
+
         <td>${token.type}</td>
 
         <td>
-          <a href="${token.url}" target="_blank">
+          <a href="${token.url}"
+             target="_blank">
             ${token.symbol}
           </a>
         </td>
@@ -80,7 +120,9 @@ async function loadScanner() {
 
         <td>$${token.volume.toLocaleString()}</td>
 
-        <td><b>${token.score}</b></td>
+        <td class="${scoreClass}">
+          <b>${token.score}</b>
+        </td>
 
         <td>${token.rating}</td>
 
@@ -106,10 +148,13 @@ async function loadScanner() {
   }
 }
 
-// =========================
-// 🚀 AUTO REFRESH
-// =========================
+// =========================================
+// 🔄 AUTO REFRESH
+// =========================================
 
 loadScanner();
 
-setInterval(loadScanner, 15000);
+setInterval(
+  loadScanner,
+  15000
+);
