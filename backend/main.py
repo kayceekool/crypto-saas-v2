@@ -1,60 +1,32 @@
-# =========================================
+# ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
-# FULL ELITE UPGRADE v33
-# =========================================
+# FULL UPGRADED main.py
+# Upgrades 23 → 33 Integrated
+# ================================
 
 from flask import Flask, jsonify
 from flask_cors import CORS
 import requests
 import time
-import random
-import threading
+import math
 
 app = Flask(__name__)
 CORS(app)
 
-# =========================================
-# 🧠 GLOBAL MEMORY
-# =========================================
-
-momentum_memory = {}
-
-market_cache = {
-    "tokens": [],
-    "last_update": 0
-}
-
-# =========================================
-# 🔥 CONFIG
-# =========================================
-
 DEX_URL = "https://api.dexscreener.com/latest/dex/search"
 
 SEARCH_TERMS = [
-    "ai",
-    "degen",
-    "wojak",
-    "pepe",
-    "bonk",
-    "pump",
-    "cat",
-    "dog",
-    "100x",
-    "moon",
-    "launch",
-    "alpha",
-    "sniper",
-    "sol",
-    "meme",
-    "gork",
-    "agi"
+    "ai","degen","wojak","pepe","bonk",
+    "pump","cat","dog","100x","moon",
+    "launch","alpha","sniper"
 ]
 
-REFRESH_INTERVAL = 20
+momentum_memory = {}
+blacklist = set()
 
-# =========================================
-# 🧠 FETCH TOKENS
-# =========================================
+# =========================
+# FETCH
+# =========================
 
 def fetch_pairs():
 
@@ -66,10 +38,7 @@ def fetch_pairs():
 
             url = f"{DEX_URL}?q={term}"
 
-            response = requests.get(
-                url,
-                timeout=10
-            )
+            response = requests.get(url, timeout=10)
 
             data = response.json()
 
@@ -82,91 +51,78 @@ def fetch_pairs():
 
     return all_pairs
 
-# =========================================
-# 🔥 SCORING ENGINE
-# =========================================
+# =========================
+# MAIN SCAN
+# =========================
 
-def process_market():
+@app.route("/scan")
+def scan():
 
     global momentum_memory
-    global market_cache
 
     pairs = fetch_pairs()
 
     best_symbols = {}
 
+    now = time.time()
+
     for pair in pairs:
 
         try:
 
-            chain = pair.get("chainId", "")
+            chain = pair.get("chainId","")
 
             if chain != "solana":
                 continue
 
             symbol = (
-                pair.get("baseToken", {})
-                .get("symbol", "UNKNOWN")
-            ).upper()
-
-            pair_address = pair.get(
-                "pairAddress",
-                ""
+                pair.get("baseToken",{})
+                .get("symbol","UNKNOWN")
+                .upper()
             )
 
-            if not pair_address:
+            if symbol in blacklist:
                 continue
 
-            price = float(
-                pair.get("priceUsd", 0) or 0
-            )
+            pair_address = pair.get("pairAddress","")
+
+            price = float(pair.get("priceUsd",0) or 0)
 
             liquidity = float(
-                pair.get("liquidity", {})
-                .get("usd", 0) or 0
+                pair.get("liquidity",{})
+                .get("usd",0) or 0
             )
 
             volume = float(
-                pair.get("volume", {})
-                .get("h24", 0) or 0
+                pair.get("volume",{})
+                .get("h24",0) or 0
             )
 
             price_change = float(
-                pair.get("priceChange", {})
-                .get("h24", 0) or 0
+                pair.get("priceChange",{})
+                .get("h24",0) or 0
             )
 
-            txns_data = pair.get(
-                "txns",
-                {}
-            ).get("h24", {})
+            txns_data = pair.get("txns",{}).get("h24",{})
 
-            buys = int(
-                txns_data.get("buys", 0)
-            )
-
-            sells = int(
-                txns_data.get("sells", 0)
-            )
+            buys = int(txns_data.get("buys",0))
+            sells = int(txns_data.get("sells",0))
 
             txns = buys + sells
 
-            pair_created = pair.get(
-                "pairCreatedAt"
-            )
+            pair_created = pair.get("pairCreatedAt")
 
             age_hours = 999999
 
             if pair_created:
 
                 age_hours = (
-                    time.time() -
-                    (pair_created / 1000)
+                    now - (pair_created / 1000)
                 ) / 3600
 
-            # =========================================
-            # 🚫 ELITE FILTERS
-            # =========================================
+            # =========================
+            # HARD FILTERS
+            # =========================
 
             if liquidity < 10000:
                 continue
@@ -177,242 +133,230 @@ def process_market():
             if txns < 10:
                 continue
 
-            if age_hours > 40000:
+            rug_probability = 0
+
+            if liquidity < 15000:
+                rug_probability += 20
+
+            if sells > buys * 2:
+                rug_probability += 30
+
+            if price_change < -70:
+                rug_probability += 30
+
+            if volume < liquidity * 0.02:
+                rug_probability += 20
+
+            if rug_probability >= 70:
+                blacklist.add(symbol)
                 continue
 
-            if symbol in [
-                "USDC",
-                "USDT",
-                "WETH",
-                "WBTC"
-            ]:
-                continue
-
-            # =========================================
-            # 🧠 BASE SCORE
-            # =========================================
+            # =========================
+            # BASE SCORE
+            # =========================
 
             score = 0
 
-            # liquidity
-
-            if liquidity > 20000:
-                score += 60
-
-            if liquidity > 100000:
-                score += 140
-
-            if liquidity > 500000:
-                score += 240
-
-            # volume
-
-            if volume > 10000:
-                score += 80
-
-            if volume > 100000:
-                score += 160
-
-            if volume > 500000:
-                score += 260
-
-            # price movement
-
-            if price_change > 5:
-                score += 60
-
-            if price_change > 20:
-                score += 140
-
-            if price_change > 50:
-                score += 260
-
-            # txns
+            score += min(liquidity / 1000, 250)
+            score += min(volume / 1000, 350)
 
             if txns > 50:
-                score += 60
+                score += 50
 
             if txns > 200:
-                score += 140
+                score += 120
 
             if txns > 500:
                 score += 220
 
-            # age boost
+            # =========================
+            # MOMENTUM MEMORY
+            # =========================
 
-            if age_hours < 24:
-                score += 180
+            key = pair_address
 
-            elif age_hours < 72:
-                score += 100
+            if key not in momentum_memory:
 
-            # =========================================
-            # 🧠 MOMENTUM MEMORY
-            # =========================================
-
-            if pair_address not in momentum_memory:
-
-                momentum_memory[pair_address] = {
-                    "last_volume": volume,
-                    "last_liquidity": liquidity,
-                    "last_price": price
+                momentum_memory[key] = {
+                    "volume": volume,
+                    "liquidity": liquidity,
+                    "price": price,
+                    "score": 0,
+                    "seen": now
                 }
 
-            history = momentum_memory[pair_address]
+            memory = momentum_memory[key]
 
             volume_growth = 0
             liquidity_growth = 0
             price_growth = 0
 
             try:
-
-                if history["last_volume"] > 0:
-
-                    volume_growth = (
-                        (volume - history["last_volume"])
-                        / history["last_volume"]
-                    ) * 100
-
+                volume_growth = (
+                    (volume - memory["volume"])
+                    / memory["volume"]
+                ) * 100
             except:
                 pass
 
             try:
-
-                if history["last_liquidity"] > 0:
-
-                    liquidity_growth = (
-                        (liquidity - history["last_liquidity"])
-                        / history["last_liquidity"]
-                    ) * 100
-
+                liquidity_growth = (
+                    (liquidity - memory["liquidity"])
+                    / memory["liquidity"]
+                ) * 100
             except:
                 pass
 
             try:
-
-                if history["last_price"] > 0:
-
-                    price_growth = (
-                        (price - history["last_price"])
-                        / history["last_price"]
-                    ) * 100
-
+                price_growth = (
+                    (price - memory["price"])
+                    / memory["price"]
+                ) * 100
             except:
                 pass
 
-            # =========================================
-            # 🚀 PUMP ENGINE
-            # =========================================
+            # =========================
+            # AI TREND PERSISTENCE
+            # =========================
 
-            if volume_growth > 40:
-                score += 120
+            if volume_growth > 25:
+                score += 180
 
-            if volume_growth > 100:
-                score += 240
+            if volume_growth > 60:
+                score += 280
 
-            if liquidity_growth > 20:
+            if liquidity_growth > 10:
                 score += 140
 
-            if price_growth > 15:
-                score += 160
+            if liquidity_growth > 30:
+                score += 220
 
-            # =========================================
-            # 🐋 SMART MONEY
-            # =========================================
-
-            if volume > liquidity:
+            if price_growth > 10:
                 score += 120
 
-            if volume > liquidity * 2:
-                score += 200
+            if price_growth > 25:
+                score += 250
 
-            if buys > sells:
+            # =========================
+            # WHALE ACCUMULATION
+            # =========================
+
+            whale_ratio = 0
+
+            if liquidity > 0:
+                whale_ratio = volume / liquidity
+
+            if whale_ratio > 1:
                 score += 120
 
-            if buys > sells * 2:
-                score += 200
+            if whale_ratio > 2:
+                score += 240
 
-            # =========================================
-            # 🚫 FAKE PUMP FILTER
-            # =========================================
+            if whale_ratio > 4:
+                score += 400
 
-            fake_pump = False
+            # =========================
+            # HYPE ENGINE
+            # =========================
+
+            if age_hours < 24 and volume > 50000:
+                score += 180
+
+            if age_hours < 12 and txns > 300:
+                score += 220
+
+            # =========================
+            # LIQUIDITY STABILITY
+            # =========================
+
+            liquidity_stability = 100
+
+            if liquidity_growth < -20:
+                liquidity_stability -= 50
+
+            if liquidity_growth < -40:
+                liquidity_stability -= 80
+
+            if liquidity_stability <= 20:
+                score -= 250
+
+            # =========================
+            # EXTREME PUMP DETECTOR
+            # =========================
 
             if (
-                price_change > 300 and
-                liquidity < 20000
+                price_change > 80
+                and volume_growth > 50
+                and buys > sells
             ):
-                fake_pump = True
+                score += 350
 
-            if (
-                volume < 5000 and
-                price_change > 120
-            ):
-                fake_pump = True
+            # =========================
+            # SCORE DECAY
+            # =========================
 
-            if fake_pump:
-                score -= 400
+            if age_hours > 2000:
+                score *= 0.7
 
-            # =========================================
-            # 🧠 CONFIDENCE
-            # =========================================
+            if age_hours > 8000:
+                score *= 0.5
 
-            confidence = 50
+            score = int(score)
 
-            if score > 200:
-                confidence = 65
-
-            if score > 400:
-                confidence = 78
-
-            if score > 600:
-                confidence = 90
-
-            if score > 850:
-                confidence = 99
-
-            # =========================================
-            # 🔥 SIGNAL ENGINE
-            # =========================================
+            # =========================
+            # SIGNAL
+            # =========================
 
             signal = "NO"
 
-            if score >= 900:
+            if score >= 1200:
+                signal = "MEGA BREAKOUT"
+
+            elif score >= 900:
                 signal = "ULTRA SEND"
 
-            elif score >= 650:
+            elif score >= 700:
                 signal = "PARABOLIC"
 
-            elif score >= 350:
+            elif score >= 450:
                 signal = "SNIPER ENTRY"
 
-            elif score >= 180:
+            elif score >= 200:
                 signal = "BUY"
 
-            # =========================================
-            # 🔥 RATING
-            # =========================================
+            # =========================
+            # RATING
+            # =========================
 
             rating = "⚠️ RISKY"
 
-            if score >= 100:
+            if score >= 150:
                 rating = "🚀 GOOD"
 
-            if score >= 180:
+            if score >= 300:
                 rating = "🔥 HOT"
 
-            if score >= 350:
+            if score >= 500:
                 rating = "💎 GEM"
 
-            if score >= 650:
+            if score >= 800:
                 rating = "🚀 PARABOLIC"
 
-            if score >= 900:
+            if score >= 1100:
                 rating = "👑 GOD CANDLE"
 
-            # =========================================
-            # 🔥 RISK
-            # =========================================
+            if score >= 1400:
+                rating = "🌋 NUCLEAR"
+
+            # =========================
+            # CONFIDENCE
+            # =========================
+
+            confidence = min(99, max(50, int(score / 15)))
+
+            # =========================
+            # RISK
+            # =========================
 
             risk = "HIGH"
 
@@ -422,39 +366,34 @@ def process_market():
             if liquidity > 100000:
                 risk = "LOW"
 
-            # =========================================
-            # 🐋 WHALES
-            # =========================================
+            # =========================
+            # WHALES
+            # =========================
 
             whales = "NONE"
 
-            if volume > liquidity:
+            if whale_ratio > 1:
                 whales = "🐋 WHALE BUYING"
 
-            if volume > liquidity * 2:
+            if whale_ratio > 2:
                 whales = "🐋 SMART MONEY"
 
-            # =========================================
-            # 🏷️ TOKEN TYPE
-            # =========================================
+            if whale_ratio > 4:
+                whales = "🦈 ELITE WHALES"
 
             token_type = "TRENDING"
 
             if age_hours < 24:
                 token_type = "NEW"
 
-            # =========================================
-            # 📦 DATA
-            # =========================================
-
-            coin_data = {
+            coin = {
                 "type": token_type,
                 "symbol": symbol,
-                "price": round(price, 8),
-                "priceChange": round(price_change, 2),
-                "liquidity": round(liquidity, 2),
-                "volume": round(volume, 2),
-                "score": int(score),
+                "price": round(price,8),
+                "priceChange": round(price_change,2),
+                "liquidity": round(liquidity,2),
+                "volume": round(volume,2),
+                "score": score,
                 "rating": rating,
                 "risk": risk,
                 "signal": signal,
@@ -464,108 +403,51 @@ def process_market():
                 "url": f"https://dexscreener.com/solana/{pair_address}"
             }
 
-            # =========================================
-            # 🧠 INSTITUTIONAL DEDUPE
-            # =========================================
-
-            market_strength = (
+            strength = (
+                score +
                 liquidity +
-                volume +
-                (score * 1000)
+                volume
             )
-
-            coin_data["market_strength"] = market_strength
 
             existing = best_symbols.get(symbol)
 
-            if existing is None:
+            if (
+                existing is None or
+                strength >
+                existing["score"] +
+                existing["liquidity"] +
+                existing["volume"]
+            ):
+                best_symbols[symbol] = coin
 
-                best_symbols[symbol] = coin_data
-
-            else:
-
-                if (
-                    market_strength >
-                    existing.get(
-                        "market_strength",
-                        0
-                    )
-                ):
-
-                    best_symbols[symbol] = coin_data
-
-            # =========================================
-            # 💾 SAVE MEMORY
-            # =========================================
-
-            momentum_memory[pair_address] = {
-                "last_volume": volume,
-                "last_liquidity": liquidity,
-                "last_price": price
+            momentum_memory[key] = {
+                "volume": volume,
+                "liquidity": liquidity,
+                "price": price,
+                "score": score,
+                "seen": now
             }
 
         except:
             pass
 
-    # =========================================
-    # 🔥 FINAL SORT
-    # =========================================
+    final_coins = list(best_symbols.values())
 
-    final_tokens = list(
-        best_symbols.values()
-    )
-
-    final_tokens.sort(
+    final_coins.sort(
         key=lambda x: (
             x["score"],
-            x["volume"],
-            x["liquidity"]
+            x["volume"]
         ),
         reverse=True
     )
 
-    final_tokens = final_tokens[:15]
+    final_coins = final_coins[:15]
 
-    market_cache["tokens"] = final_tokens
-    market_cache["last_update"] = time.time()
+    return jsonify(final_coins)
 
-# =========================================
-# 🔄 BACKGROUND REFRESH
-# =========================================
-
-def background_worker():
-
-    while True:
-
-        try:
-
-            process_market()
-
-        except:
-            pass
-
-        time.sleep(REFRESH_INTERVAL)
-
-threading.Thread(
-    target=background_worker,
-    daemon=True
-).start()
-
-# =========================================
-# 🌐 API
-# =========================================
-
-@app.route("/scan")
-
-def scan():
-
-    return jsonify(
-        market_cache["tokens"]
-    )
-
-# =========================================
-# 🚀 START
-# =========================================
+# =========================
+# START
+# =========================
 
 if __name__ == "__main__":
 
