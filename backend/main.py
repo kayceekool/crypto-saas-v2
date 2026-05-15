@@ -25,7 +25,7 @@ momentum_memory = {}
 blacklist = set()
 
 # =========================
-# FETCH
+# FETCH TOKENS (SAFE MODE)
 # =========================
 
 def fetch_pairs():
@@ -38,16 +38,55 @@ def fetch_pairs():
 
             url = f"{DEX_URL}?q={term}"
 
-            response = requests.get(url, timeout=10)
+            response = requests.get(
+                url,
+                timeout=10,
+                headers={
+                    "User-Agent": "Mozilla/5.0"
+                }
+            )
 
-            data = response.json()
+            # =========================
+            # SAFE STATUS CHECK
+            # =========================
+
+            if response.status_code != 200:
+
+                print(
+                    f"BAD STATUS {response.status_code}"
+                )
+
+                continue
+
+            # =========================
+            # SAFE JSON PARSE
+            # =========================
+
+            try:
+
+                data = response.json()
+
+            except Exception as json_error:
+
+                print(
+                    "JSON ERROR:",
+                    json_error
+                )
+
+                continue
 
             pairs = data.get("pairs", [])
 
-            all_pairs.extend(pairs)
+            if isinstance(pairs, list):
 
-        except:
-            pass
+                all_pairs.extend(pairs)
+
+        except Exception as e:
+
+            print(
+                "FETCH ERROR:",
+                e
+            )
 
     return all_pairs
 
