@@ -1,33 +1,32 @@
-# ================================
+# =========================================
 # 🚀 CRYPTO SCANNER AI ENGINE
-# FULL UPGRADED main.py
-# Upgrades 11 → 22 Integrated
-# ================================
+# FULL ELITE UPGRADE v33
+# =========================================
 
 from flask import Flask, jsonify
 from flask_cors import CORS
 import requests
 import time
 import random
+import threading
 
 app = Flask(__name__)
 CORS(app)
 
-# =========================
-# 🧠 MOMENTUM MEMORY
-# =========================
+# =========================================
+# 🧠 GLOBAL MEMORY
+# =========================================
 
 momentum_memory = {}
 
-# =========================
-# 🧠 SYMBOL DEDUPE ENGINE
-# =========================
+market_cache = {
+    "tokens": [],
+    "last_update": 0
+}
 
-best_symbols = {}
-
-# =========================
+# =========================================
 # 🔥 CONFIG
-# =========================
+# =========================================
 
 DEX_URL = "https://api.dexscreener.com/latest/dex/search"
 
@@ -44,12 +43,18 @@ SEARCH_TERMS = [
     "moon",
     "launch",
     "alpha",
-    "sniper"
+    "sniper",
+    "sol",
+    "meme",
+    "gork",
+    "agi"
 ]
 
-# =========================
-# 🔥 FETCH TOKENS
-# =========================
+REFRESH_INTERVAL = 20
+
+# =========================================
+# 🧠 FETCH TOKENS
+# =========================================
 
 def fetch_pairs():
 
@@ -61,7 +66,10 @@ def fetch_pairs():
 
             url = f"{DEX_URL}?q={term}"
 
-            response = requests.get(url, timeout=10)
+            response = requests.get(
+                url,
+                timeout=10
+            )
 
             data = response.json()
 
@@ -74,19 +82,16 @@ def fetch_pairs():
 
     return all_pairs
 
-# =========================
-# 🔥 MAIN SCANNER
-# =========================
+# =========================================
+# 🔥 SCORING ENGINE
+# =========================================
 
-@app.route("/scan")
-
-def scan():
+def process_market():
 
     global momentum_memory
+    global market_cache
 
     pairs = fetch_pairs()
-
-    filtered_coins = []
 
     best_symbols = {}
 
@@ -102,11 +107,15 @@ def scan():
             symbol = (
                 pair.get("baseToken", {})
                 .get("symbol", "UNKNOWN")
+            ).upper()
+
+            pair_address = pair.get(
+                "pairAddress",
+                ""
             )
 
-            symbol = symbol.upper()
-
-            pair_address = pair.get("pairAddress", "")
+            if not pair_address:
+                continue
 
             price = float(
                 pair.get("priceUsd", 0) or 0
@@ -127,7 +136,10 @@ def scan():
                 .get("h24", 0) or 0
             )
 
-            txns_data = pair.get("txns", {}).get("h24", {})
+            txns_data = pair.get(
+                "txns",
+                {}
+            ).get("h24", {})
 
             buys = int(
                 txns_data.get("buys", 0)
@@ -139,35 +151,46 @@ def scan():
 
             txns = buys + sells
 
-            pair_created = pair.get("pairCreatedAt")
+            pair_created = pair.get(
+                "pairCreatedAt"
+            )
 
             age_hours = 999999
 
             if pair_created:
+
                 age_hours = (
                     time.time() -
                     (pair_created / 1000)
                 ) / 3600
 
-            # =========================
-            # ☠️ DEAD TOKEN FILTER
-            # =========================
+            # =========================================
+            # 🚫 ELITE FILTERS
+            # =========================================
 
-            if liquidity < 8000:
+            if liquidity < 10000:
                 continue
 
-            if volume < 500:
+            if volume < 100:
                 continue
 
-            if txns < 15:
+            if txns < 10:
                 continue
 
-            if age_hours > 30000 and volume < 10000:
+            if age_hours > 40000:
                 continue
 
-            # =========================
+            if symbol in [
+                "USDC",
+                "USDT",
+                "WETH",
+                "WBTC"
+            ]:
+                continue
+
+            # =========================================
             # 🧠 BASE SCORE
-            # =========================
+            # =========================================
 
             score = 0
 
@@ -177,10 +200,10 @@ def scan():
                 score += 60
 
             if liquidity > 100000:
-                score += 120
+                score += 140
 
             if liquidity > 500000:
-                score += 200
+                score += 240
 
             # volume
 
@@ -202,44 +225,40 @@ def scan():
                 score += 140
 
             if price_change > 50:
-                score += 240
+                score += 260
 
-            # transactions
+            # txns
 
             if txns > 50:
-                score += 50
+                score += 60
 
             if txns > 200:
-                score += 100
+                score += 140
 
             if txns > 500:
-                score += 180
+                score += 220
 
             # age boost
 
             if age_hours < 24:
-                score += 140
+                score += 180
 
             elif age_hours < 72:
-                score += 80
+                score += 100
 
-            # =========================
-            # 🧠 MOMENTUM TRACKING
-            # =========================
+            # =========================================
+            # 🧠 MOMENTUM MEMORY
+            # =========================================
 
-            pair_key = pair_address
+            if pair_address not in momentum_memory:
 
-            if pair_key not in momentum_memory:
-
-                momentum_memory[pair_key] = {
+                momentum_memory[pair_address] = {
                     "last_volume": volume,
                     "last_liquidity": liquidity,
-                    "last_price": price,
-                    "pump_count": 0,
-                    "last_seen": time.time()
+                    "last_price": price
                 }
 
-            history = momentum_memory[pair_key]
+            history = momentum_memory[pair_address]
 
             volume_growth = 0
             liquidity_growth = 0
@@ -281,161 +300,119 @@ def scan():
             except:
                 pass
 
-            # =========================
-            # 🚀 EARLY PUMP DETECTOR
-            # =========================
+            # =========================================
+            # 🚀 PUMP ENGINE
+            # =========================================
 
-            early_pump_score = 0
-
-            if volume_growth > 50:
-                early_pump_score += 120
+            if volume_growth > 40:
+                score += 120
 
             if volume_growth > 100:
-                early_pump_score += 220
+                score += 240
 
             if liquidity_growth > 20:
-                early_pump_score += 100
+                score += 140
 
             if price_growth > 15:
-                early_pump_score += 150
+                score += 160
 
-            if age_hours < 48:
-                early_pump_score += 120
-
-            score += early_pump_score
-
-            # =========================
+            # =========================================
             # 🐋 SMART MONEY
-            # =========================
+            # =========================================
 
-            smart_money_score = 0
+            if volume > liquidity:
+                score += 120
 
             if volume > liquidity * 2:
-                smart_money_score += 140
+                score += 200
 
             if buys > sells:
-                smart_money_score += 120
+                score += 120
 
-            if txns > 300:
-                smart_money_score += 100
+            if buys > sells * 2:
+                score += 200
 
-            if price_change > 20:
-                smart_money_score += 150
-
-            score += smart_money_score
-
-            # =========================
+            # =========================================
             # 🚫 FAKE PUMP FILTER
-            # =========================
+            # =========================================
 
             fake_pump = False
 
             if (
-                price_change > 300
-                and volume < 20000
+                price_change > 300 and
+                liquidity < 20000
             ):
                 fake_pump = True
 
             if (
-                liquidity < 15000
-                and price_change > 150
+                volume < 5000 and
+                price_change > 120
             ):
                 fake_pump = True
 
             if fake_pump:
-                score -= 300
+                score -= 400
 
-            # =========================
-            # 🔥 CONTINUATION ENGINE
-            # =========================
-
-            continuation_score = 0
-
-            if volume_growth > 30 and price_change > 20:
-                continuation_score += 120
-
-            if (
-                volume_growth > 80
-                and liquidity_growth > 10
-            ):
-                continuation_score += 180
-
-            if buys > sells * 1.5:
-                continuation_score += 100
-
-            score += continuation_score
-
-            # =========================
-            # 🔥 CONFIDENCE ENGINE
-            # =========================
+            # =========================================
+            # 🧠 CONFIDENCE
+            # =========================================
 
             confidence = 50
 
             if score > 200:
-                confidence = 60
+                confidence = 65
 
-            if score > 350:
-                confidence = 70
+            if score > 400:
+                confidence = 78
 
-            if score > 500:
-                confidence = 85
+            if score > 600:
+                confidence = 90
 
-            if score > 700:
-                confidence = 92
-
-            if score > 900:
+            if score > 850:
                 confidence = 99
 
-            if fake_pump:
-                confidence -= 25
-
-            confidence = max(
-                1,
-                min(confidence, 99)
-            )
-
-            # =========================
+            # =========================================
             # 🔥 SIGNAL ENGINE
-            # =========================
+            # =========================================
 
             signal = "NO"
 
             if score >= 900:
                 signal = "ULTRA SEND"
 
-            elif score >= 700:
+            elif score >= 650:
                 signal = "PARABOLIC"
 
-            elif score >= 450:
+            elif score >= 350:
                 signal = "SNIPER ENTRY"
 
-            elif score >= 200:
+            elif score >= 180:
                 signal = "BUY"
 
-            # =========================
-            # 🔥 RATING ENGINE
-            # =========================
+            # =========================================
+            # 🔥 RATING
+            # =========================================
 
             rating = "⚠️ RISKY"
 
             if score >= 100:
                 rating = "🚀 GOOD"
 
-            if score >= 200:
+            if score >= 180:
                 rating = "🔥 HOT"
 
             if score >= 350:
                 rating = "💎 GEM"
 
-            if score >= 700:
+            if score >= 650:
                 rating = "🚀 PARABOLIC"
 
             if score >= 900:
                 rating = "👑 GOD CANDLE"
 
-            # =========================
-            # 🔥 RISK ENGINE
-            # =========================
+            # =========================================
+            # 🔥 RISK
+            # =========================================
 
             risk = "HIGH"
 
@@ -445,9 +422,9 @@ def scan():
             if liquidity > 100000:
                 risk = "LOW"
 
-            # =========================
-            # 🐋 WHALE DETECTION
-            # =========================
+            # =========================================
+            # 🐋 WHALES
+            # =========================================
 
             whales = "NONE"
 
@@ -457,18 +434,18 @@ def scan():
             if volume > liquidity * 2:
                 whales = "🐋 SMART MONEY"
 
-            # =========================
-            # 🔥 TOKEN TYPE
-            # =========================
+            # =========================================
+            # 🏷️ TOKEN TYPE
+            # =========================================
 
             token_type = "TRENDING"
 
             if age_hours < 24:
                 token_type = "NEW"
 
-            # =========================
-            # 📦 COIN DATA
-            # =========================
+            # =========================================
+            # 📦 DATA
+            # =========================================
 
             coin_data = {
                 "type": token_type,
@@ -487,9 +464,9 @@ def scan():
                 "url": f"https://dexscreener.com/solana/{pair_address}"
             }
 
-            # =========================
+            # =========================================
             # 🧠 INSTITUTIONAL DEDUPE
-            # =========================
+            # =========================================
 
             market_strength = (
                 liquidity +
@@ -507,72 +484,88 @@ def scan():
 
             else:
 
-                existing_strength = existing.get(
-                    "market_strength",
-                    0
-                )
-
-                if market_strength > existing_strength:
+                if (
+                    market_strength >
+                    existing.get(
+                        "market_strength",
+                        0
+                    )
+                ):
 
                     best_symbols[symbol] = coin_data
 
-            # =========================
-            # 💾 SAVE HISTORY
-            # =========================
+            # =========================================
+            # 💾 SAVE MEMORY
+            # =========================================
 
-            momentum_memory[pair_key] = {
+            momentum_memory[pair_address] = {
                 "last_volume": volume,
                 "last_liquidity": liquidity,
-                "last_price": price,
-                "pump_count": (
-                    history.get("pump_count", 0) + 1
-                ),
-                "last_seen": time.time()
+                "last_price": price
             }
 
         except:
             pass
 
-    # =========================
-    # 🔄 FINAL MARKET ROTATION
-    # =========================
+    # =========================================
+    # 🔥 FINAL SORT
+    # =========================================
 
-    filtered_coins = list(best_symbols.values())
+    final_tokens = list(
+        best_symbols.values()
+    )
 
-    filtered_coins.sort(
+    final_tokens.sort(
         key=lambda x: (
-            x.get("score", 0),
-            x.get("volume", 0),
-            x.get("liquidity", 0)
+            x["score"],
+            x["volume"],
+            x["liquidity"]
         ),
         reverse=True
     )
 
-    final_coins = []
+    final_tokens = final_tokens[:15]
 
-    used_symbols = set()
+    market_cache["tokens"] = final_tokens
+    market_cache["last_update"] = time.time()
 
-    for coin in filtered_coins:
+# =========================================
+# 🔄 BACKGROUND REFRESH
+# =========================================
 
-        sym = coin["symbol"].upper()
+def background_worker():
 
-        if sym in used_symbols:
-            continue
+    while True:
 
-        used_symbols.add(sym)
+        try:
 
-        final_coins.append(coin)
+            process_market()
 
-        if len(final_coins) >= 15:
-            break
+        except:
+            pass
 
-    filtered_coins = final_coins
+        time.sleep(REFRESH_INTERVAL)
 
-    return jsonify(filtered_coins)
+threading.Thread(
+    target=background_worker,
+    daemon=True
+).start()
 
-# =========================
-# 🚀 START SERVER
-# =========================
+# =========================================
+# 🌐 API
+# =========================================
+
+@app.route("/scan")
+
+def scan():
+
+    return jsonify(
+        market_cache["tokens"]
+    )
+
+# =========================================
+# 🚀 START
+# =========================================
 
 if __name__ == "__main__":
 
