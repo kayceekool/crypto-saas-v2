@@ -1,105 +1,90 @@
-// =========================================
-// 🚀 ELITE FRONTEND ENGINE v33
-// =========================================
+// ================================
+// 🚀 FULL UPGRADED index.js
+// Upgrades 23 → 33 Integrated
+// ================================
 
 const API_URL =
-  "https://crypto-saas-v2.onrender.com/scan";
+"https://crypto-saas-v2.onrender.com/scan";
 
 const tbody =
-  document.getElementById("scannerBody");
+document.getElementById("scannerBody");
 
-const liveStatus =
-  document.getElementById("liveStatus");
-
-// =========================================
-// 🔥 STATUS ENGINE
-// =========================================
+// =========================
+// LIVE STATUS
+// =========================
 
 const statusMessages = [
 
   "Scanning whale wallets...",
-
   "Tracking smart money...",
+  "Detecting mega breakouts...",
+  "Monitoring liquidity shifts...",
+  "Analyzing AI momentum...",
+  "Watching elite whale inflows...",
+  "Filtering rugpull risks...",
+  "Monitoring sniper entries...",
+  "AI institutional engine active...",
+  "Live market synchronization..."
 
-  "Analyzing momentum...",
-
-  "Filtering fake pumps...",
-
-  "Detecting sniper entries...",
-
-  "Monitoring liquidity inflows...",
-
-  "Institutional AI active...",
-
-  "Syncing live market data...",
-
-  "Watching meme rotations...",
-
-  "Calculating confidence engine..."
 ];
 
 let statusIndex = 0;
 
 setInterval(() => {
 
+  const liveStatus =
+  document.getElementById("liveStatus");
+
   if (liveStatus) {
 
     liveStatus.innerText =
-      statusMessages[statusIndex];
+    statusMessages[statusIndex];
 
     statusIndex++;
 
-    if (
-      statusIndex >=
-      statusMessages.length
-    ) {
+    if (statusIndex >= statusMessages.length) {
       statusIndex = 0;
     }
+
   }
 
-}, 4000);
+}, 3500);
 
-// =========================================
-// 🎨 SCORE COLORS
-// =========================================
-
-function getScoreClass(score) {
-
-  if (score >= 900)
-    return "score-god";
-
-  if (score >= 650)
-    return "score-para";
-
-  if (score >= 350)
-    return "score-gem";
-
-  return "score-normal";
-}
-
-// =========================================
-// 🚀 LOAD SCANNER
-// =========================================
+// =========================
+// LOAD SCANNER
+// =========================
 
 async function loadScanner() {
 
   try {
 
     const response =
-      await fetch(API_URL);
+    await fetch(API_URL);
 
     const data =
-      await response.json();
+    await response.json();
 
     tbody.innerHTML = "";
 
     data.forEach(token => {
 
       const row =
-        document.createElement("tr");
+      document.createElement("tr");
 
-      const scoreClass =
-        getScoreClass(token.score);
+      let scoreColor = "";
+
+      if (token.score >= 1200) {
+        scoreColor = "#ff00ff";
+      }
+      else if (token.score >= 900) {
+        scoreColor = "#ff0000";
+      }
+      else if (token.score >= 700) {
+        scoreColor = "#ff8800";
+      }
+      else {
+        scoreColor = "#00ff99";
+      }
 
       row.innerHTML = `
 
@@ -107,8 +92,8 @@ async function loadScanner() {
 
         <td>
           <a href="${token.url}"
-             target="_blank">
-            ${token.symbol}
+          target="_blank">
+          ${token.symbol}
           </a>
         </td>
 
@@ -120,8 +105,13 @@ async function loadScanner() {
 
         <td>$${token.volume.toLocaleString()}</td>
 
-        <td class="${scoreClass}">
-          <b>${token.score}</b>
+        <td>
+          <b style="
+            color:${scoreColor};
+            font-size:16px;
+          ">
+            ${token.score}
+          </b>
         </td>
 
         <td>${token.rating}</td>
@@ -135,6 +125,7 @@ async function loadScanner() {
         <td>${token.whales}</td>
 
         <td>${token.age}</td>
+
       `;
 
       tbody.appendChild(row);
@@ -146,15 +137,13 @@ async function loadScanner() {
     console.log(err);
 
   }
+
 }
 
-// =========================================
-// 🔄 AUTO REFRESH
-// =========================================
+// =========================
+// AUTO REFRESH
+// =========================
 
 loadScanner();
 
-setInterval(
-  loadScanner,
-  15000
-);
+setInterval(loadScanner, 12000);
