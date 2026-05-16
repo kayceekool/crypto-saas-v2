@@ -1,7 +1,7 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
 # FULL UPGRADED main.py
-# Upgrades 23 → 34 Integrated
+# REAL PUMP.FUN LAUNCH ENGINE
 # ================================
 
 from flask import Flask, jsonify
@@ -24,10 +24,15 @@ SEARCH_TERMS = [
 
 momentum_memory = {}
 blacklist = set()
+
+# =========================
+# 🚀 NEW LAUNCH CACHE
+# =========================
+
 new_launches_cache = []
 
 # =========================
-# FETCH TOKENS (SAFE MODE)
+# FETCH TOKENS
 # =========================
 
 def fetch_pairs():
@@ -48,47 +53,18 @@ def fetch_pairs():
                 }
             )
 
-            # =========================
-            # SAFE STATUS CHECK
-            # =========================
-
             if response.status_code != 200:
-
-                print(
-                    f"BAD STATUS {response.status_code}"
-                )
-
                 continue
 
-            # =========================
-            # SAFE JSON PARSE
-            # =========================
-
-            try:
-
-                data = response.json()
-
-            except Exception as json_error:
-
-                print(
-                    "JSON ERROR:",
-                    json_error
-                )
-
-                continue
+            data = response.json()
 
             pairs = data.get("pairs", [])
 
             if isinstance(pairs, list):
-
                 all_pairs.extend(pairs)
 
-        except Exception as e:
-
-            print(
-                "FETCH ERROR:",
-                e
-            )
+        except:
+            pass
 
     return all_pairs
 
@@ -129,7 +105,7 @@ def fetch_new_launches():
 
             try:
 
-                chain = item.get("chainId","")
+                chain = item.get("chainId", "")
 
                 if chain != "solana":
                     continue
@@ -183,6 +159,28 @@ def fetch_new_launches():
         )
 
 # =========================
+# 🔄 BACKGROUND LAUNCH LOOP
+# =========================
+
+def background_launch_fetcher():
+
+    while True:
+
+        try:
+
+            fetch_new_launches()
+
+        except:
+            pass
+
+        time.sleep(90)
+
+threading.Thread(
+    target=background_launch_fetcher,
+    daemon=True
+).start()
+
+# =========================
 # MAIN SCAN
 # =========================
 
@@ -193,8 +191,8 @@ def scan():
 
     pairs = fetch_pairs()
 
-# merge real fresh launches
-pairs.extend(new_launches_cache)
+    # merge real fresh launches
+    pairs.extend(new_launches_cache)
 
     best_symbols = {}
 
@@ -267,24 +265,6 @@ pairs.extend(new_launches_cache)
             if txns < 10:
                 continue
 
-            rug_probability = 0
-
-            if liquidity < 15000:
-                rug_probability += 20
-
-            if sells > buys * 2:
-                rug_probability += 30
-
-            if price_change < -70:
-                rug_probability += 30
-
-            if volume < liquidity * 0.02:
-                rug_probability += 20
-
-            if rug_probability >= 70:
-                blacklist.add(symbol)
-                continue
-
             # =========================
             # BASE SCORE
             # =========================
@@ -350,61 +330,28 @@ pairs.extend(new_launches_cache)
                 pass
 
             # =========================
-            # AI TREND PERSISTENCE
+            # WHALE RATIO
             # =========================
 
-            if volume_growth > 25:
-                score += 180
+            whale_ratio = 0
 
-            if volume_growth > 60:
-                score += 280
-
-            if liquidity_growth > 10:
-                score += 140
-
-            if liquidity_growth > 30:
-                score += 220
-
-            if price_growth > 10:
-                score += 120
-
-            if price_growth > 25:
-                score += 250
+            if liquidity > 0:
+                whale_ratio = volume / liquidity
 
             # =========================
-            # WHALE ACCUMULATION
-            # =========================
-
-            whales = "NONE"
-
-            if whale_legit:
-
-                if whale_ratio > 1:
-                    whales = "🐋 WHALE BUYING"
-
-                if whale_ratio > 2:
-                    whales = "🐋 SMART MONEY"
-
-                if whale_ratio > 4:
-                    whales = "🦈 ELITE WHALES"
-
-# =========================
             # 🚨 SMART RUG FILTER AI
             # =========================
 
             rug_score = 0
 
-            # fake insane marketcap
             marketcap = liquidity * 2
 
             if marketcap > 500000000:
                 rug_score += 300
 
-            # suspicious huge liquidity
             if liquidity > 50000000 and volume < 10000:
                 rug_score += 250
 
-            # suspicious new launch
             if (
                 age_hours < 12 and
                 liquidity > 1000000 and
@@ -412,33 +359,25 @@ pairs.extend(new_launches_cache)
             ):
                 rug_score += 280
 
-            # fake price stability
             if (
                 abs(price_change) < 0.5 and
                 volume < 5000
             ):
                 rug_score += 120
 
-            # fake liquidity wall
-            if (
-                liquidity > volume * 100
-            ):
+            if liquidity > volume * 100:
                 rug_score += 180
 
-            # sell pressure
             if sells > buys * 3:
                 rug_score += 200
 
-            # suspicious low activity
             if txns < 20 and liquidity > 100000:
                 rug_score += 180
 
-            # blacklist obvious rugs
             if rug_score >= 400:
                 blacklist.add(symbol)
                 continue
 
-            # reduce score heavily
             score -= rug_score
 
             # =========================
@@ -448,11 +387,6 @@ pairs.extend(new_launches_cache)
             real_whale_score = 0
 
             whale_legit = False
-
-            # whales only valid if:
-            # high txn count
-            # healthy buy pressure
-            # strong volume
 
             if (
                 txns > 150 and
@@ -473,241 +407,44 @@ pairs.extend(new_launches_cache)
                     real_whale_score += 400
 
             else:
-
-                # remove fake whale signals
                 whale_ratio = 0
 
             score += real_whale_score
 
             # =========================
-            # 🔒 LIQUIDITY SAFETY AI
+            # 🚀 PUMP.FUN EARLY DETECTOR
             # =========================
-
-            liquidity_safety = 0
-
-            if liquidity > 25000:
-                liquidity_safety += 80
-
-            if liquidity > 100000:
-                liquidity_safety += 120
-
-            if liquidity > 500000:
-                liquidity_safety += 180
-
-            # punish weak liquidity
-            if liquidity < 15000:
-                liquidity_safety -= 180
-
-            score += liquidity_safety
-
-            # =========================
-            # 🚀 REAL MOMENTUM ENGINE
-            # =========================
-
-            momentum_strength = 0
-
-            if volume_growth > 20:
-                momentum_strength += 100
-
-            if volume_growth > 50:
-                momentum_strength += 180
-
-            if volume_growth > 100:
-                momentum_strength += 260
 
             if (
+                age_hours < 6 and
+                volume > 15000 and
                 buys > sells and
-                liquidity_growth > 5
+                txns > 80
             ):
-                momentum_strength += 120
-
-            score += momentum_strength
-
-            # =========================
-            # HYPE ENGINE
-            # =========================
-
-            if age_hours < 24 and volume > 50000:
-                score += 180
-
-            if age_hours < 12 and txns > 300:
-                score += 220
-
-            # =========================
-            # LIQUIDITY STABILITY
-            # =========================
-
-            liquidity_stability = 100
-
-            if liquidity_growth < -20:
-                liquidity_stability -= 50
-
-            if liquidity_growth < -40:
-                liquidity_stability -= 80
-
-            if liquidity_stability <= 20:
-                score -= 250
-
-            # =========================
-            # EXTREME PUMP DETECTOR
-            # =========================
-
-            extreme_pump_score = 0
+                score += 280
 
             if (
-                price_change > 80
-                and volume_growth > 50
-                and buys > sells
+                age_hours < 3 and
+                liquidity > 20000 and
+                volume_growth > 20
             ):
-                extreme_pump_score += 350
-
-            if volume_growth > 100:
-                extreme_pump_score += 180
-
-            if volume_growth > 250:
-                extreme_pump_score += 320
-
-            if liquidity_growth > 30:
-                extreme_pump_score += 160
-
-            if liquidity_growth > 80:
-                extreme_pump_score += 260
-
-            if price_growth > 25:
-                extreme_pump_score += 180
-
-            if price_growth > 60:
-                extreme_pump_score += 320
-
-            score += extreme_pump_score
+                score += 340
 
             # =========================
-            # 🚀 VOLUME ACCELERATION AI
+            # TOKEN TYPE
             # =========================
 
-            acceleration_score = 0
+            token_type = "TRENDING"
 
-            if volume_growth > 15:
-                acceleration_score += 80
+            if age_hours < 24:
+                token_type = "NEW"
 
-            if volume_growth > 40:
-                acceleration_score += 160
+            if age_hours < 3:
+                token_type = "JUST LAUNCHED"
+                score += 320
 
-            if volume_growth > 80:
-                acceleration_score += 260
-
-            if volume_growth > 150:
-                acceleration_score += 400
-
-            score += acceleration_score
-
-            # =========================
-            # 🐋 ELITE WHALE ENGINE
-            # =========================
-
-            elite_whale_score = 0
-
-            buy_pressure = 0
-
-            if sells > 0:
-                buy_pressure = buys / sells
-
-            if buy_pressure > 1.2:
-                elite_whale_score += 80
-
-            if buy_pressure > 1.8:
-                elite_whale_score += 180
-
-            if buy_pressure > 2.5:
-                elite_whale_score += 320
-
-            if whale_ratio > 3:
-                elite_whale_score += 260
-
-            score += elite_whale_score
-
-            # =========================
-            # 🔥 BREAKOUT CONTINUATION
-            # =========================
-
-            continuation_score = 0
-
-            if (
-                volume_growth > 25 and
-                price_change > 10
-            ):
-                continuation_score += 120
-
-            if (
-                volume_growth > 50 and
-                liquidity_growth > 10
-            ):
-                continuation_score += 180
-
-            if (
-                buys > sells and
-                txns > 200
-            ):
-                continuation_score += 140
-
-            score += continuation_score
-
-            # =========================
-            # ☠️ DEAD PAIR FILTER
-            # =========================
-
-            dead_pair_penalty = 0
-
-            if volume < 1000:
-                dead_pair_penalty += 80
-
-            if txns < 25:
-                dead_pair_penalty += 120
-
-            if (
-                volume < liquidity * 0.01
-            ):
-                dead_pair_penalty += 180
-
-            if (
-                buys < sells and
-                price_change < -20
-            ):
-                dead_pair_penalty += 220
-
-            score -= dead_pair_penalty
-
-            # =========================
-            # 🧠 TREND PERSISTENCE AI
-            # =========================
-
-            persistence_bonus = 0
-
-            if (
-                volume_growth > 20 and
-                liquidity_growth > 5
-            ):
-                persistence_bonus += 140
-
-            if (
-                whale_ratio > 1.5 and
-                buys > sells
-            ):
-                persistence_bonus += 160
-
-            score += persistence_bonus
-
-            # =========================
-            # SCORE DECAY
-            # =========================
-
-            if age_hours > 2000:
-                score *= 0.7
-
-            if age_hours > 8000:
-                score *= 0.5
-
-            score = int(score)
+            if age_hours < 1:
+                score += 450
 
             # =========================
             # SIGNAL
@@ -793,19 +530,16 @@ pairs.extend(new_launches_cache)
 
             whales = "NONE"
 
-            if whale_ratio > 1:
-                whales = "🐋 WHALE BUYING"
+            if whale_legit:
 
-            if whale_ratio > 2:
-                whales = "🐋 SMART MONEY"
+                if whale_ratio > 1:
+                    whales = "🐋 WHALE BUYING"
 
-            if whale_ratio > 4:
-                whales = "🦈 ELITE WHALES"
+                if whale_ratio > 2:
+                    whales = "🐋 SMART MONEY"
 
-            token_type = "TRENDING"
-
-            if age_hours < 24:
-                token_type = "NEW"
+                if whale_ratio > 4:
+                    whales = "🦈 ELITE WHALES"
 
             coin = {
                 "type": token_type,
@@ -814,7 +548,7 @@ pairs.extend(new_launches_cache)
                 "priceChange": round(price_change,2),
                 "liquidity": round(liquidity,2),
                 "volume": round(volume,2),
-                "score": score,
+                "score": int(score),
                 "rating": rating,
                 "risk": risk,
                 "signal": signal,
@@ -849,12 +583,8 @@ pairs.extend(new_launches_cache)
                 "seen": now
             }
 
-        except Exception as e:
-
-            print(
-                "SCAN ERROR:",
-                e
-            )
+        except:
+            pass
 
     final_coins = list(best_symbols.values())
 
