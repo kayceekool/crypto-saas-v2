@@ -280,19 +280,18 @@ def scan():
             # WHALE ACCUMULATION
             # =========================
 
-            whale_ratio = 0
+            whales = "NONE"
 
-            if liquidity > 0:
-                whale_ratio = volume / liquidity
+            if whale_legit:
 
-            if whale_ratio > 1:
-                score += 120
+                if whale_ratio > 1:
+                    whales = "🐋 WHALE BUYING"
 
-            if whale_ratio > 2:
-                score += 240
+                if whale_ratio > 2:
+                    whales = "🐋 SMART MONEY"
 
-            if whale_ratio > 4:
-                score += 400
+                if whale_ratio > 4:
+                    whales = "🦈 ELITE WHALES"
 
 # =========================
             # 🚨 SMART RUG FILTER AI
