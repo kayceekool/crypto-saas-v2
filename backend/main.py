@@ -193,6 +193,9 @@ def scan():
 
     pairs = fetch_pairs()
 
+# merge real fresh launches
+pairs.extend(new_launches_cache)
+
     best_symbols = {}
 
     now = time.time()
