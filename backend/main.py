@@ -9,6 +9,7 @@ from flask_cors import CORS
 import requests
 import time
 import math
+import threading
 
 app = Flask(__name__)
 CORS(app)
@@ -23,6 +24,7 @@ SEARCH_TERMS = [
 
 momentum_memory = {}
 blacklist = set()
+new_launches_cache = []
 
 # =========================
 # FETCH TOKENS (SAFE MODE)
@@ -89,6 +91,96 @@ def fetch_pairs():
             )
 
     return all_pairs
+
+# =========================
+# 🚀 REAL NEW LAUNCH FETCHER
+# =========================
+
+def fetch_new_launches():
+
+    global new_launches_cache
+
+    try:
+
+        url = (
+            "https://api.dexscreener.com/"
+            "token-profiles/latest/v1"
+        )
+
+        response = requests.get(
+            url,
+            timeout=15,
+            headers={
+                "User-Agent": "Mozilla/5.0"
+            }
+        )
+
+        if response.status_code != 200:
+            return
+
+        data = response.json()
+
+        if not isinstance(data, list):
+            return
+
+        fresh_pairs = []
+
+        for item in data:
+
+            try:
+
+                chain = item.get("chainId","")
+
+                if chain != "solana":
+                    continue
+
+                token_address = item.get(
+                    "tokenAddress",
+                    ""
+                )
+
+                if not token_address:
+                    continue
+
+                pair_data_url = (
+                    f"https://api.dexscreener.com/"
+                    f"latest/dex/tokens/"
+                    f"{token_address}"
+                )
+
+                pair_response = requests.get(
+                    pair_data_url,
+                    timeout=10
+                )
+
+                if pair_response.status_code != 200:
+                    continue
+
+                pair_json = pair_response.json()
+
+                pairs = pair_json.get("pairs", [])
+
+                if not pairs:
+                    continue
+
+                fresh_pairs.extend(pairs)
+
+            except:
+                pass
+
+        new_launches_cache = fresh_pairs[:80]
+
+        print(
+            f"Fetched {len(new_launches_cache)} "
+            f"fresh launches"
+        )
+
+    except Exception as e:
+
+        print(
+            "NEW LAUNCH ERROR:",
+            e
+        )
 
 # =========================
 # MAIN SCAN
