@@ -294,6 +294,141 @@ def scan():
             if whale_ratio > 4:
                 score += 400
 
+# =========================
+            # 🚨 SMART RUG FILTER AI
+            # =========================
+
+            rug_score = 0
+
+            # fake insane marketcap
+            marketcap = liquidity * 2
+
+            if marketcap > 500000000:
+                rug_score += 300
+
+            # suspicious huge liquidity
+            if liquidity > 50000000 and volume < 10000:
+                rug_score += 250
+
+            # suspicious new launch
+            if (
+                age_hours < 12 and
+                liquidity > 1000000 and
+                txns < 50
+            ):
+                rug_score += 280
+
+            # fake price stability
+            if (
+                abs(price_change) < 0.5 and
+                volume < 5000
+            ):
+                rug_score += 120
+
+            # fake liquidity wall
+            if (
+                liquidity > volume * 100
+            ):
+                rug_score += 180
+
+            # sell pressure
+            if sells > buys * 3:
+                rug_score += 200
+
+            # suspicious low activity
+            if txns < 20 and liquidity > 100000:
+                rug_score += 180
+
+            # blacklist obvious rugs
+            if rug_score >= 400:
+                blacklist.add(symbol)
+                continue
+
+            # reduce score heavily
+            score -= rug_score
+
+            # =========================
+            # 🐋 REAL WHALE DETECTOR
+            # =========================
+
+            real_whale_score = 0
+
+            whale_legit = False
+
+            # whales only valid if:
+            # high txn count
+            # healthy buy pressure
+            # strong volume
+
+            if (
+                txns > 150 and
+                buys > sells and
+                volume > 50000
+            ):
+                whale_legit = True
+
+            if whale_legit:
+
+                if whale_ratio > 1:
+                    real_whale_score += 120
+
+                if whale_ratio > 2:
+                    real_whale_score += 240
+
+                if whale_ratio > 4:
+                    real_whale_score += 400
+
+            else:
+
+                # remove fake whale signals
+                whale_ratio = 0
+
+            score += real_whale_score
+
+            # =========================
+            # 🔒 LIQUIDITY SAFETY AI
+            # =========================
+
+            liquidity_safety = 0
+
+            if liquidity > 25000:
+                liquidity_safety += 80
+
+            if liquidity > 100000:
+                liquidity_safety += 120
+
+            if liquidity > 500000:
+                liquidity_safety += 180
+
+            # punish weak liquidity
+            if liquidity < 15000:
+                liquidity_safety -= 180
+
+            score += liquidity_safety
+
+            # =========================
+            # 🚀 REAL MOMENTUM ENGINE
+            # =========================
+
+            momentum_strength = 0
+
+            if volume_growth > 20:
+                momentum_strength += 100
+
+            if volume_growth > 50:
+                momentum_strength += 180
+
+            if volume_growth > 100:
+                momentum_strength += 260
+
+            if (
+                buys > sells and
+                liquidity_growth > 5
+            ):
+                momentum_strength += 120
+
+            score += momentum_strength
+
             # =========================
             # HYPE ENGINE
             # =========================
