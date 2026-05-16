@@ -1,7 +1,7 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
 # FULL UPGRADED main.py
-# Upgrades 23 → 33 Integrated
+# Upgrades 23 → 34 Integrated
 # ================================
 
 from flask import Flask, jsonify
@@ -243,12 +243,8 @@ def scan():
                     (liquidity - memory["liquidity"])
                     / memory["liquidity"]
                 ) * 100
-            except Exception as e:
-
-    print(
-        "SCAN ERROR:",
-        e
-    )
+            except:
+                pass
 
             try:
                 price_growth = (
@@ -327,12 +323,150 @@ def scan():
             # EXTREME PUMP DETECTOR
             # =========================
 
+            extreme_pump_score = 0
+
             if (
                 price_change > 80
                 and volume_growth > 50
                 and buys > sells
             ):
-                score += 350
+                extreme_pump_score += 350
+
+            if volume_growth > 100:
+                extreme_pump_score += 180
+
+            if volume_growth > 250:
+                extreme_pump_score += 320
+
+            if liquidity_growth > 30:
+                extreme_pump_score += 160
+
+            if liquidity_growth > 80:
+                extreme_pump_score += 260
+
+            if price_growth > 25:
+                extreme_pump_score += 180
+
+            if price_growth > 60:
+                extreme_pump_score += 320
+
+            score += extreme_pump_score
+
+            # =========================
+            # 🚀 VOLUME ACCELERATION AI
+            # =========================
+
+            acceleration_score = 0
+
+            if volume_growth > 15:
+                acceleration_score += 80
+
+            if volume_growth > 40:
+                acceleration_score += 160
+
+            if volume_growth > 80:
+                acceleration_score += 260
+
+            if volume_growth > 150:
+                acceleration_score += 400
+
+            score += acceleration_score
+
+            # =========================
+            # 🐋 ELITE WHALE ENGINE
+            # =========================
+
+            elite_whale_score = 0
+
+            buy_pressure = 0
+
+            if sells > 0:
+                buy_pressure = buys / sells
+
+            if buy_pressure > 1.2:
+                elite_whale_score += 80
+
+            if buy_pressure > 1.8:
+                elite_whale_score += 180
+
+            if buy_pressure > 2.5:
+                elite_whale_score += 320
+
+            if whale_ratio > 3:
+                elite_whale_score += 260
+
+            score += elite_whale_score
+
+            # =========================
+            # 🔥 BREAKOUT CONTINUATION
+            # =========================
+
+            continuation_score = 0
+
+            if (
+                volume_growth > 25 and
+                price_change > 10
+            ):
+                continuation_score += 120
+
+            if (
+                volume_growth > 50 and
+                liquidity_growth > 10
+            ):
+                continuation_score += 180
+
+            if (
+                buys > sells and
+                txns > 200
+            ):
+                continuation_score += 140
+
+            score += continuation_score
+
+            # =========================
+            # ☠️ DEAD PAIR FILTER
+            # =========================
+
+            dead_pair_penalty = 0
+
+            if volume < 1000:
+                dead_pair_penalty += 80
+
+            if txns < 25:
+                dead_pair_penalty += 120
+
+            if (
+                volume < liquidity * 0.01
+            ):
+                dead_pair_penalty += 180
+
+            if (
+                buys < sells and
+                price_change < -20
+            ):
+                dead_pair_penalty += 220
+
+            score -= dead_pair_penalty
+
+            # =========================
+            # 🧠 TREND PERSISTENCE AI
+            # =========================
+
+            persistence_bonus = 0
+
+            if (
+                volume_growth > 20 and
+                liquidity_growth > 5
+            ):
+                persistence_bonus += 140
+
+            if (
+                whale_ratio > 1.5 and
+                buys > sells
+            ):
+                persistence_bonus += 160
+
+            score += persistence_bonus
 
             # =========================
             # SCORE DECAY
@@ -352,7 +486,13 @@ def scan():
 
             signal = "NO"
 
-            if score >= 1200:
+            if score >= 2200:
+                signal = "APEX LEGEND"
+
+            elif score >= 1700:
+                signal = "SUPERNOVA"
+
+            elif score >= 1200:
                 signal = "MEGA BREAKOUT"
 
             elif score >= 900:
@@ -391,11 +531,20 @@ def scan():
             if score >= 1400:
                 rating = "🌋 NUCLEAR"
 
+            if score >= 1800:
+                rating = "🧠 AI SUPERNOVA"
+
+            if score >= 2300:
+                rating = "👑 KING SLAYER"
+
             # =========================
             # CONFIDENCE
             # =========================
 
-            confidence = min(99, max(50, int(score / 15)))
+            confidence = min(
+                99,
+                max(50, int(score / 15))
+            )
 
             # =========================
             # RISK
@@ -471,8 +620,12 @@ def scan():
                 "seen": now
             }
 
-        except:
-            pass
+        except Exception as e:
+
+            print(
+                "SCAN ERROR:",
+                e
+            )
 
     final_coins = list(best_symbols.values())
 
