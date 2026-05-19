@@ -1,14 +1,12 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
-# FULL UPGRADED main.py
-# ELITE PUMPFUN SNIPER EDITION
+# ULTRA SNIPER UPGRADE
 # ================================
 
 from flask import Flask, jsonify
 from flask_cors import CORS
 import requests
 import time
-import math
 
 app = Flask(__name__)
 CORS(app)
@@ -16,21 +14,27 @@ CORS(app)
 DEX_URL = "https://api.dexscreener.com/latest/dex/search"
 
 SEARCH_TERMS = [
+    "ai","degen","wojak","pepe","bonk",
+    "pump","cat","dog","100x","moon",
+    "launch","alpha","sniper"
+]
+
+PUMPFUN_TERMS = [
     "pump",
-    "fun",
     "new",
     "launch",
     "moon",
     "meme",
-    "degen",
+    "dog",
+    "cat",
     "ai",
     "pepe",
-    "wojak",
-    "cat",
-    "dog",
     "bonk",
+    "degen",
     "100x",
+    "elon",
     "sol",
+    "trump",
     "sniper",
     "gem"
 ]
@@ -46,7 +50,12 @@ def fetch_pairs():
 
     all_pairs = []
 
-    for term in SEARCH_TERMS:
+    all_search_terms = (
+        SEARCH_TERMS +
+        PUMPFUN_TERMS
+    )
+
+    for term in all_search_terms:
 
         try:
 
@@ -64,7 +73,6 @@ def fetch_pairs():
                 continue
 
             try:
-
                 data = response.json()
 
             except:
@@ -73,12 +81,10 @@ def fetch_pairs():
             pairs = data.get("pairs", [])
 
             if isinstance(pairs, list):
-
                 all_pairs.extend(pairs)
 
-        except Exception as e:
-
-            print("FETCH ERROR:", e)
+        except:
+            pass
 
     return all_pairs
 
@@ -101,7 +107,9 @@ def scan():
 
         try:
 
-            chain = pair.get("chainId","")
+            chain = pair.get(
+                "chainId",""
+            )
 
             if chain != "solana":
                 continue
@@ -167,7 +175,9 @@ def scan():
             if pair_created:
 
                 age_hours = (
-                    now - (pair_created / 1000)
+                    now - (
+                        pair_created / 1000
+                    )
                 ) / 3600
 
             # =========================
@@ -190,8 +200,8 @@ def scan():
                 continue
 
             if (
-                liquidity > 0 and
-                market_cap > liquidity * 500
+                market_cap >
+                liquidity * 500
             ):
                 continue
 
@@ -309,19 +319,7 @@ def scan():
                 pass
 
             # =========================
-            # WHALE RATIO
-            # =========================
-
-            whale_ratio = 0
-
-            if liquidity > 0:
-
-                whale_ratio = (
-                    volume / liquidity
-                )
-
-            # =========================
-            # AI TREND PERSISTENCE
+            # TREND AI
             # =========================
 
             if volume_growth > 25:
@@ -343,8 +341,16 @@ def scan():
                 score += 250
 
             # =========================
-            # WHALE ACCUMULATION
+            # WHALE RATIO
             # =========================
+
+            whale_ratio = 0
+
+            if liquidity > 0:
+
+                whale_ratio = (
+                    volume / liquidity
+                )
 
             if whale_ratio > 1:
                 score += 120
@@ -515,181 +521,108 @@ def scan():
             score += persistence_bonus
 
             # =========================
-            # PUMPFUN EARLY LAUNCH AI
+            # SCAM DETECTION ENGINE
             # =========================
 
-            launch_score = 0
-
-            if age_hours < 1:
-                launch_score += 400
-
-            if age_hours < 0.5:
-                launch_score += 650
-
-            if age_hours < 0.2:
-                launch_score += 950
-
-            if liquidity > 12000:
-                launch_score += 120
-
-            if liquidity > 30000:
-                launch_score += 220
-
-            if txns > 80:
-                launch_score += 180
-
-            if txns > 200:
-                launch_score += 320
-
-            if buys > sells:
-                launch_score += 140
-
-            if volume_growth > 20:
-                launch_score += 180
-
-            if volume_growth > 50:
-                launch_score += 320
-
-            if price_growth > 10:
-                launch_score += 140
-
-            if price_growth > 25:
-                launch_score += 260
-
-            score += launch_score
-
-            # =========================
-            # VIRAL MOMENTUM AI
-            # =========================
-
-            viral_score = 0
-
-            if txns > 150:
-                viral_score += 140
-
-            if txns > 300:
-                viral_score += 240
-
-            if whale_ratio > 2:
-                viral_score += 260
-
-            if whale_ratio > 4:
-                viral_score += 420
-
-            if buys > sells * 2:
-                viral_score += 200
-
-            if volume > liquidity:
-                viral_score += 180
-
-            score += viral_score
-
-            # =========================
-            # MICROCAP EXPLOSION AI
-            # =========================
-
-            microcap_score = 0
+            scam_score = 0
 
             if (
-                liquidity > 10000 and
-                liquidity < 150000
-            ):
-                microcap_score += 160
-
-            if (
-                volume > liquidity
-            ):
-                microcap_score += 240
-
-            if (
-                age_hours < 6 and
-                txns > 120
-            ):
-                microcap_score += 260
-
-            if (
-                price_change > 30
-            ):
-                microcap_score += 180
-
-            if (
-                price_change > 80
-            ):
-                microcap_score += 320
-
-            score += microcap_score
-
-            # =========================
-            # ADVANCED SCAM FILTER
-            # =========================
-
-            scam_penalty = 0
-
-            if (
-                market_cap > 100000000 and
+                market_cap > 10000000 and
                 liquidity < 50000
             ):
-                scam_penalty += 800
+                scam_score += 80
+
+            if liquidity > 0:
+
+                mc_liq_ratio = (
+                    market_cap / liquidity
+                )
+
+                if mc_liq_ratio > 300:
+                    scam_score += 60
+
+                if mc_liq_ratio > 800:
+                    scam_score += 120
 
             if (
-                liquidity > 0 and
-                market_cap > liquidity * 250
+                age_hours < 3 and
+                liquidity > 10000000
             ):
-                scam_penalty += 600
+                scam_score += 150
 
             if (
                 txns < 20 and
-                market_cap > 5000000
+                volume > 100000
             ):
-                scam_penalty += 500
+                scam_score += 120
 
             if (
-                age_hours < 12 and
-                volume < 1000
+                buys > 0 and
+                sells > 0
             ):
-                scam_penalty += 300
 
-            if sells > buys * 1.8:
-                scam_penalty += 260
+                buy_sell_ratio = (
+                    buys / sells
+                )
 
-            if liquidity < 8000:
-                scam_penalty += 350
-
-            score -= scam_penalty
-
-            # =========================
-            # SMART DECAY SYSTEM
-            # =========================
-
-            if age_hours > 48:
-                score *= 0.92
-
-            if age_hours > 120:
-                score *= 0.80
-
-            if age_hours > 500:
-                score *= 0.65
-
-            # =========================
-            # STEALTH LAUNCH BOOST
-            # =========================
-
-            stealth_bonus = 0
+                if (
+                    buy_sell_ratio > 8 or
+                    buy_sell_ratio < 0.12
+                ):
+                    scam_score += 70
 
             if (
-                age_hours < 2 and
-                txns > 50 and
-                buys > sells
+                liquidity <
+                (
+                    market_cap * 0.002
+                )
             ):
-                stealth_bonus += 350
+                scam_score += 80
 
             if (
-                age_hours < 1 and
-                volume_growth > 30
+                market_cap > 5000000 and
+                volume < 5000
             ):
-                stealth_bonus += 500
+                scam_score += 120
 
-            score += stealth_bonus
+            score -= scam_score
+
+            # =========================
+            # EARLY PUMPFUN SNIPER
+            # =========================
+
+            early_launch_bonus = 0
+
+            if age_hours < 6:
+
+                early_launch_bonus += 100
+
+                if volume > 10000:
+                    early_launch_bonus += 120
+
+                if txns > 80:
+                    early_launch_bonus += 140
+
+                if buys > sells:
+                    early_launch_bonus += 120
+
+                if volume_growth > 30:
+                    early_launch_bonus += 180
+
+                if liquidity_growth > 15:
+                    early_launch_bonus += 160
+
+                if whale_ratio > 1:
+                    early_launch_bonus += 140
+
+            if (
+                age_hours < 24 and
+                price_change > 150 and
+                volume > 1000000
+            ):
+                early_launch_bonus += 500
+
+            score += early_launch_bonus
 
             # =========================
             # SCORE DECAY
@@ -761,16 +694,19 @@ def scan():
                 rating = "👑 KING SLAYER"
 
             # =========================
-            # CONFIDENCE
+            # CONFIDENCE ENGINE
             # =========================
 
             confidence = min(
                 99,
-                max(50, int(score / 15))
+                max(
+                    50,
+                    int(score / 15)
+                )
             )
 
             # =========================
-            # RISK
+            # RISK ENGINE
             # =========================
 
             risk = "HIGH"
@@ -781,19 +717,41 @@ def scan():
             if liquidity > 100000:
                 risk = "LOW"
 
+            if scam_score >= 80:
+                risk = "HIGH"
+
+            if scam_score >= 150:
+                risk = "EXTREME"
+
+            if (
+                age_hours < 12 and
+                market_cap > 10000000 and
+                volume < 10000
+            ):
+                risk = "EXTREME"
+
             # =========================
             # WHALES
             # =========================
 
             whales = "NONE"
 
-            if whale_ratio > 1:
+            if (
+                whale_ratio > 1 and
+                liquidity > 50000
+            ):
                 whales = "🐋 WHALE BUYING"
 
-            if whale_ratio > 2:
+            if (
+                whale_ratio > 2 and
+                liquidity > 100000
+            ):
                 whales = "🐋 SMART MONEY"
 
-            if whale_ratio > 4:
+            if (
+                whale_ratio > 4 and
+                liquidity > 250000
+            ):
                 whales = "🦈 ELITE WHALES"
 
             # =========================
@@ -802,23 +760,14 @@ def scan():
 
             token_type = "TRENDING"
 
-            if age_hours < 24:
+            if age_hours < 6:
+                token_type = "PUMPFUN NEW"
+
+            elif age_hours < 24:
                 token_type = "NEW LAUNCH"
 
-            if age_hours < 6:
+            elif age_hours < 72:
                 token_type = "EARLY"
-
-            if age_hours < 2:
-                token_type = "STEALTH"
-
-            if age_hours < 0.5:
-                token_type = "PUMPFUN"
-
-            if (
-                age_hours < 0.2 and
-                txns > 80
-            ):
-                token_type = "PUMPFUN GEM"
 
             coin = {
                 "type": token_type,
@@ -876,26 +825,25 @@ def scan():
 
         except Exception as e:
 
-            print("SCAN ERROR:", e)
+            print(
+                "SCAN ERROR:",
+                e
+            )
 
     final_coins = list(
         best_symbols.values()
     )
 
-    # prioritize early launches
-
     final_coins.sort(
         key=lambda x: (
-            x["type"] == "PUMPFUN GEM",
-            x["type"] == "PUMPFUN",
-            x["type"] == "STEALTH",
+            x["type"] == "PUMPFUN NEW",
             x["score"],
             x["volume"]
         ),
         reverse=True
     )
 
-    final_coins = final_coins[:25]
+    final_coins = final_coins[:20]
 
     return jsonify(final_coins)
 
