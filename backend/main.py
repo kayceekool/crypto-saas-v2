@@ -597,6 +597,43 @@ def scan():
                 liquidity < 30000
             ):
                 risk = "EXTREME"
+# =========================
+            # IMPERSONATION FILTER
+            # =========================
+
+            suspicious_symbols = [
+                "pump",
+                "pepe",
+                "bonk",
+                "trump",
+                "doge",
+                "shib",
+                "moon",
+                "ai"
+            ]
+
+            if (
+                symbol.lower() in suspicious_symbols and
+                age_hours > 720
+            ):
+                risk = "HIGH"
+                confidence -= 20
+
+            # absurd price explosions
+
+            if price_change > 50000:
+                risk = "EXTREME"
+                confidence -= 40
+
+            # suspicious valuation
+
+            if (
+                market_cap > 1000000000 and
+                volume < 500000
+            ):
+                risk = "EXTREME"
+                confidence -= 35
+
 
             # =========================
             # SIGNAL ENGINE
