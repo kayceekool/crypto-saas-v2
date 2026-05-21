@@ -1,6 +1,7 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
-# REAL SNIPER ENGINE V1
+# REAL SNIPER ENGINE V2
+# Smart Risk + Confidence Upgrade
 # ================================
 
 from flask import Flask, jsonify
@@ -208,7 +209,7 @@ def scan():
             if volume < liquidity * 0.02:
                 rug_probability += 20
 
-            # unlocked liquidity suspicion
+            # suspicious liquidity
 
             if (
                 liquidity < 50000 and
@@ -557,6 +558,47 @@ def scan():
             score = int(score)
 
             # =========================
+            # SMART RISK ENGINE
+            # =========================
+
+            risk = "HIGH"
+
+            if liquidity > 30000:
+                risk = "MEDIUM"
+
+            if liquidity > 100000:
+                risk = "LOW"
+
+            # suspicious fake launches
+
+            if (
+                market_cap > 100000000 and
+                liquidity < 50000
+            ):
+                risk = "EXTREME"
+
+            if (
+                market_cap >
+                liquidity * 300
+            ):
+                risk = "EXTREME"
+
+            if rug_probability >= 50:
+                risk = "EXTREME"
+
+            if (
+                age_hours < 6 and
+                liquidity < 15000
+            ):
+                risk = "EXTREME"
+
+            if (
+                price_change > 1000 and
+                liquidity < 30000
+            ):
+                risk = "EXTREME"
+
+            # =========================
             # SIGNAL ENGINE
             # =========================
 
@@ -614,23 +656,15 @@ def scan():
                 rating = "👑 KING SLAYER"
 
             # =========================
-            # 🧠 SMART CONFIDENCE ENGINE
+            # SMART CONFIDENCE ENGINE
             # =========================
 
             confidence = 50
-
-            # =========================
-            # SCORE CONFIDENCE
-            # =========================
 
             confidence += min(
                 int(score / 40),
                 35
             )
-
-            # =========================
-            # LIQUIDITY CONFIDENCE
-            # =========================
 
             if liquidity > 25000:
                 confidence += 5
@@ -641,19 +675,11 @@ def scan():
             if liquidity > 500000:
                 confidence += 5
 
-            # =========================
-            # VOLUME QUALITY
-            # =========================
-
             if volume > liquidity * 0.5:
                 confidence += 5
 
             if volume > liquidity:
                 confidence += 5
-
-            # =========================
-            # BUY PRESSURE
-            # =========================
 
             if buys > sells:
                 confidence += 5
@@ -661,9 +687,7 @@ def scan():
             if buys > sells * 2:
                 confidence += 5
 
-            # =========================
-            # RUG PENALTIES
-            # =========================
+            # rug penalties
 
             if rug_probability >= 20:
                 confidence -= 10
@@ -674,11 +698,7 @@ def scan():
             if rug_probability >= 60:
                 confidence -= 35
 
-            # =========================
-            # SCAM DETECTION PENALTIES
-            # =========================
-
-            # fake market cap
+            # scam penalties
 
             if (
                 market_cap > 100000000 and
@@ -686,20 +706,14 @@ def scan():
             ):
                 confidence -= 40
 
-            # suspicious fdv/liquidity ratio
-
             if (
                 market_cap >
                 liquidity * 300
             ):
                 confidence -= 30
 
-            # weak liquidity
-
             if liquidity < 15000:
                 confidence -= 15
-
-            # suspicious new launches
 
             if (
                 age_hours < 6 and
@@ -707,17 +721,11 @@ def scan():
             ):
                 confidence -= 20
 
-            # massive spike with weak liquidity
-
             if (
                 price_change > 1000 and
                 liquidity < 30000
             ):
                 confidence -= 30
-
-            # =========================
-            # DEAD TOKEN PENALTY
-            # =========================
 
             if volume < 1000:
                 confidence -= 20
@@ -725,14 +733,17 @@ def scan():
             if txns < 20:
                 confidence -= 20
 
-            # =========================
-            # FINAL LIMITS
-            # =========================
+            # EXTREME RISK DESTROYS CONFIDENCE
+
+            if risk == "EXTREME":
+                confidence -= 45
 
             confidence = max(
                 5,
                 min(confidence, 99)
-            )    # =========================
+            )
+
+            # =========================
             # WHALES
             # =========================
 
