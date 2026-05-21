@@ -614,33 +614,125 @@ def scan():
                 rating = "👑 KING SLAYER"
 
             # =========================
-            # CONFIDENCE
+            # 🧠 SMART CONFIDENCE ENGINE
             # =========================
 
-            confidence = min(
-                99,
-                max(
-                    50,
-                    int(score / 15)
-                )
+            confidence = 50
+
+            # =========================
+            # SCORE CONFIDENCE
+            # =========================
+
+            confidence += min(
+                int(score / 40),
+                35
             )
 
             # =========================
-            # RISK ENGINE
+            # LIQUIDITY CONFIDENCE
             # =========================
 
-            risk = "HIGH"
-
-            if liquidity > 30000:
-                risk = "MEDIUM"
+            if liquidity > 25000:
+                confidence += 5
 
             if liquidity > 100000:
-                risk = "LOW"
+                confidence += 5
 
-            if rug_probability >= 40:
-                risk = "HIGH"
+            if liquidity > 500000:
+                confidence += 5
 
             # =========================
+            # VOLUME QUALITY
+            # =========================
+
+            if volume > liquidity * 0.5:
+                confidence += 5
+
+            if volume > liquidity:
+                confidence += 5
+
+            # =========================
+            # BUY PRESSURE
+            # =========================
+
+            if buys > sells:
+                confidence += 5
+
+            if buys > sells * 2:
+                confidence += 5
+
+            # =========================
+            # RUG PENALTIES
+            # =========================
+
+            if rug_probability >= 20:
+                confidence -= 10
+
+            if rug_probability >= 40:
+                confidence -= 20
+
+            if rug_probability >= 60:
+                confidence -= 35
+
+            # =========================
+            # SCAM DETECTION PENALTIES
+            # =========================
+
+            # fake market cap
+
+            if (
+                market_cap > 100000000 and
+                liquidity < 50000
+            ):
+                confidence -= 40
+
+            # suspicious fdv/liquidity ratio
+
+            if (
+                market_cap >
+                liquidity * 300
+            ):
+                confidence -= 30
+
+            # weak liquidity
+
+            if liquidity < 15000:
+                confidence -= 15
+
+            # suspicious new launches
+
+            if (
+                age_hours < 6 and
+                txns < 40
+            ):
+                confidence -= 20
+
+            # massive spike with weak liquidity
+
+            if (
+                price_change > 1000 and
+                liquidity < 30000
+            ):
+                confidence -= 30
+
+            # =========================
+            # DEAD TOKEN PENALTY
+            # =========================
+
+            if volume < 1000:
+                confidence -= 20
+
+            if txns < 20:
+                confidence -= 20
+
+            # =========================
+            # FINAL LIMITS
+            # =========================
+
+            confidence = max(
+                5,
+                min(confidence, 99)
+            )    # =========================
             # WHALES
             # =========================
 
