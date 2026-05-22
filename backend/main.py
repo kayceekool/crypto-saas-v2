@@ -1,6 +1,6 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
-# REAL SNIPER ENGINE V2
+# REAL SNIPER ENGINE V3
 # Smart Risk + Confidence Upgrade
 # ================================
 
@@ -208,8 +208,6 @@ def scan():
 
             if volume < liquidity * 0.02:
                 rug_probability += 20
-
-            # suspicious liquidity
 
             if (
                 liquidity < 50000 and
@@ -569,8 +567,6 @@ def scan():
             if liquidity > 100000:
                 risk = "LOW"
 
-            # suspicious fake launches
-
             if (
                 market_cap > 100000000 and
                 liquidity < 50000
@@ -597,7 +593,8 @@ def scan():
                 liquidity < 30000
             ):
                 risk = "EXTREME"
-# =========================
+
+            # =========================
             # IMPERSONATION FILTER
             # =========================
 
@@ -617,23 +614,15 @@ def scan():
                 age_hours > 720
             ):
                 risk = "HIGH"
-                confidence -= 20
-
-            # absurd price explosions
 
             if price_change > 50000:
                 risk = "EXTREME"
-                confidence -= 40
-
-            # suspicious valuation
 
             if (
                 market_cap > 1000000000 and
                 volume < 500000
             ):
                 risk = "EXTREME"
-                confidence -= 35
-
 
             # =========================
             # SIGNAL ENGINE
@@ -698,18 +687,14 @@ def scan():
 
             confidence = 50
 
-            # =========================
             # SCORE CONFIDENCE
-            # =========================
 
             confidence += min(
                 int(score / 40),
                 35
             )
 
-            # =========================
             # LIQUIDITY CONFIDENCE
-            # =========================
 
             if liquidity > 25000:
                 confidence += 5
@@ -720,9 +705,7 @@ def scan():
             if liquidity > 500000:
                 confidence += 5
 
-            # =========================
             # VOLUME QUALITY
-            # =========================
 
             if volume > liquidity * 0.5:
                 confidence += 5
@@ -730,9 +713,7 @@ def scan():
             if volume > liquidity:
                 confidence += 5
 
-            # =========================
             # BUY PRESSURE
-            # =========================
 
             if buys > sells:
                 confidence += 5
@@ -740,9 +721,7 @@ def scan():
             if buys > sells * 2:
                 confidence += 5
 
-            # =========================
             # RUG PENALTIES
-            # =========================
 
             if rug_probability >= 20:
                 confidence -= 10
@@ -753,11 +732,7 @@ def scan():
             if rug_probability >= 60:
                 confidence -= 35
 
-            # =========================
             # SCAM DETECTION PENALTIES
-            # =========================
-
-            # fake market cap
 
             if (
                 market_cap > 100000000 and
@@ -765,20 +740,14 @@ def scan():
             ):
                 confidence -= 40
 
-            # suspicious fdv/liquidity ratio
-
             if (
                 market_cap >
                 liquidity * 300
             ):
                 confidence -= 35
 
-            # weak liquidity
-
             if liquidity < 15000:
                 confidence -= 20
-
-            # suspicious new launches
 
             if (
                 age_hours < 6 and
@@ -786,17 +755,13 @@ def scan():
             ):
                 confidence -= 25
 
-            # massive spike with weak liquidity
-
             if (
                 price_change > 1000 and
                 liquidity < 30000
             ):
                 confidence -= 40
 
-            # =========================
             # IMPERSONATION FILTER
-            # =========================
 
             suspicious_symbols = [
                 "pump",
@@ -829,9 +794,7 @@ def scan():
             ):
                 confidence -= 40
 
-            # =========================
             # DEAD TOKEN PENALTY
-            # =========================
 
             if volume < 1000:
                 confidence -= 20
@@ -839,9 +802,7 @@ def scan():
             if txns < 20:
                 confidence -= 20
 
-            # =========================
             # FINAL SCAM OVERRIDE
-            # =========================
 
             if risk == "EXTREME":
                 confidence = min(confidence, 25)
@@ -849,14 +810,28 @@ def scan():
             elif risk == "HIGH":
                 confidence = min(confidence, 55)
 
-            # =========================
             # FINAL LIMITS
-            # =========================
 
             confidence = max(
                 5,
                 min(confidence, 99)
             )
+
+            # =========================
+            # WHALES
+            # =========================
+
+            whales = "NONE"
+
+            if whale_ratio > 1:
+                whales = "🐋 WHALE BUYING"
+
+            if whale_ratio > 2:
+                whales = "🐋 SMART MONEY"
+
+            if whale_ratio > 4:
+                whales = "🦈 ELITE WHALES"
+
             # =========================
             # TOKEN TYPE
             # =========================
