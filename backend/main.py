@@ -1,7 +1,7 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
 # REAL SNIPER ENGINE V3
-# Smart Risk + Confidence Upgrade
+# Pump.fun Early Detection Upgrade
 # ================================
 
 from flask import Flask, jsonify
@@ -14,36 +14,45 @@ CORS(app)
 
 DEX_URL = "https://api.dexscreener.com/latest/dex/search"
 
-SEARCH_TERMS = [
-    "ai","degen","wojak","pepe","bonk",
-    "pump","cat","dog","100x","moon",
-    "launch","alpha","sniper"
-]
-
-PUMPFUN_TERMS = [
-    "pump","new","launch","moon","meme",
-    "dog","cat","ai","pepe","bonk",
-    "degen","100x","elon","sol",
-    "trump","sniper","gem"
-]
-
 momentum_memory = {}
 blacklist = set()
 
 # =========================
 # FETCH PAIRS
+# PHASE 1 PUMPFUN SNIPER
 # =========================
 
 def fetch_pairs():
 
     all_pairs = []
+    seen_pairs = set()
 
-    search_terms = (
-        SEARCH_TERMS +
-        PUMPFUN_TERMS
-    )
+    sniper_terms = [
+        "pump",
+        "pumpfun",
+        "moon",
+        "launch",
+        "meme",
+        "new",
+        "sol",
+        "ai",
+        "dog",
+        "cat",
+        "pepe",
+        "bonk",
+        "wojak",
+        "degen",
+        "100x",
+        "gem",
+        "trending",
+        "elon",
+        "trump",
+        "sniper",
+        "fresh",
+        "early"
+    ]
 
-    for term in search_terms:
+    for term in sniper_terms:
 
         try:
 
@@ -64,8 +73,77 @@ def fetch_pairs():
 
             pairs = data.get("pairs", [])
 
-            if isinstance(pairs, list):
-                all_pairs.extend(pairs)
+            if not isinstance(pairs, list):
+                continue
+
+            for pair in pairs:
+
+                try:
+
+                    pair_address = pair.get(
+                        "pairAddress",""
+                    )
+
+                    if (
+                        not pair_address or
+                        pair_address in seen_pairs
+                    ):
+                        continue
+
+                    seen_pairs.add(
+                        pair_address
+                    )
+
+                    if (
+                        pair.get(
+                            "chainId",""
+                        ) != "solana"
+                    ):
+                        continue
+
+                    liquidity = float(
+                        pair.get(
+                            "liquidity",{}
+                        ).get("usd",0) or 0
+                    )
+
+                    volume = float(
+                        pair.get(
+                            "volume",{}
+                        ).get("h24",0) or 0
+                    )
+
+                    txns_data = pair.get(
+                        "txns",{}
+                    ).get("h24",{})
+
+                    buys = int(
+                        txns_data.get(
+                            "buys",0
+                        )
+                    )
+
+                    sells = int(
+                        txns_data.get(
+                            "sells",0
+                        )
+                    )
+
+                    txns = buys + sells
+
+                    if liquidity < 3000:
+                        continue
+
+                    if volume < 100:
+                        continue
+
+                    if txns < 3:
+                        continue
+
+                    all_pairs.append(pair)
+
+                except:
+                    pass
 
         except:
             pass
@@ -90,11 +168,6 @@ def scan():
     for pair in pairs:
 
         try:
-
-            chain = pair.get("chainId","")
-
-            if chain != "solana":
-                continue
 
             symbol = (
                 pair.get("baseToken",{})
@@ -185,12 +258,6 @@ def scan():
             ):
                 continue
 
-            if (
-                age_hours < 12 and
-                volume < 500
-            ):
-                continue
-
             # =========================
             # RUG FILTER
             # =========================
@@ -218,7 +285,6 @@ def scan():
             if rug_probability >= 70:
 
                 blacklist.add(symbol)
-
                 continue
 
             # =========================
@@ -257,9 +323,7 @@ def scan():
                 momentum_memory[key] = {
                     "volume": volume,
                     "liquidity": liquidity,
-                    "price": price,
-                    "score": 0,
-                    "seen": now
+                    "price": price
                 }
 
             memory = momentum_memory[key]
@@ -293,37 +357,13 @@ def scan():
                 pass
 
             # =========================
-            # AI TREND PERSISTENCE
-            # =========================
-
-            if volume_growth > 25:
-                score += 180
-
-            if volume_growth > 60:
-                score += 280
-
-            if liquidity_growth > 10:
-                score += 140
-
-            if liquidity_growth > 30:
-                score += 220
-
-            if price_growth > 10:
-                score += 120
-
-            if price_growth > 25:
-                score += 250
-
-            # =========================
-            # WHALE ACCUMULATION
+            # WHALE ENGINE
             # =========================
 
             whale_ratio = 0
 
             if liquidity > 0:
-                whale_ratio = (
-                    volume / liquidity
-                )
+                whale_ratio = volume / liquidity
 
             if whale_ratio > 1:
                 score += 120
@@ -335,228 +375,74 @@ def scan():
                 score += 400
 
             # =========================
-            # HYPE ENGINE
-            # =========================
-
-            if (
-                age_hours < 24 and
-                volume > 50000
-            ):
-                score += 180
-
-            if (
-                age_hours < 12 and
-                txns > 300
-            ):
-                score += 220
-
-            # =========================
-            # EXTREME PUMP DETECTOR
-            # =========================
-
-            if (
-                price_change > 80 and
-                volume_growth > 50 and
-                buys > sells
-            ):
-                score += 350
-
-            # =========================
             # EARLY LAUNCH SNIPER
             # =========================
 
-            launch_score = 0
-
             if age_hours < 1:
-                launch_score += 400
+                score += 400
 
-            if age_hours < 3:
-                launch_score += 250
+            elif age_hours < 3:
+                score += 250
 
-            if age_hours < 6:
-                launch_score += 120
+            elif age_hours < 6:
+                score += 120
+
+            # =========================
+            # EXTREME EARLY DETECTION
+            # =========================
+
+            early_sniper_score = 0
+
+            if age_hours < 0.25:
+                early_sniper_score += 600
+
+            elif age_hours < 0.5:
+                early_sniper_score += 450
+
+            elif age_hours < 1:
+                early_sniper_score += 300
+
+            if buys > sells * 3:
+                early_sniper_score += 220
+
+            if buys > sells * 5:
+                early_sniper_score += 350
+
+            if txns > 50 and age_hours < 1:
+                early_sniper_score += 180
+
+            if txns > 120 and age_hours < 1:
+                early_sniper_score += 300
 
             if (
-                age_hours < 6 and
-                volume > 10000
+                liquidity > 15000 and
+                age_hours < 1
             ):
-                launch_score += 220
+                early_sniper_score += 220
 
             if (
-                age_hours < 3 and
-                txns > 150
+                volume_growth > 40 and
+                liquidity_growth > 10
             ):
-                launch_score += 260
-
-            if (
-                buys > sells * 2 and
-                txns > 80
-            ):
-                launch_score += 320
-
-            if (
-                price_change > 30 and
-                volume_growth > 40
-            ):
-                launch_score += 420
+                early_sniper_score += 260
 
             if (
                 whale_ratio > 1.5 and
-                liquidity > 25000
+                age_hours < 3
             ):
-                launch_score += 240
-
-            score += launch_score
-
-            # =========================
-            # VOLUME ACCELERATION AI
-            # =========================
-
-            acceleration_score = 0
-
-            if volume_growth > 15:
-                acceleration_score += 80
-
-            if volume_growth > 40:
-                acceleration_score += 160
-
-            if volume_growth > 80:
-                acceleration_score += 260
-
-            if volume_growth > 150:
-                acceleration_score += 400
-
-            score += acceleration_score
-
-            # =========================
-            # ELITE WHALE ENGINE
-            # =========================
-
-            elite_whale_score = 0
-
-            buy_pressure = 0
-
-            if sells > 0:
-                buy_pressure = buys / sells
-
-            if buy_pressure > 1.2:
-                elite_whale_score += 80
-
-            if buy_pressure > 1.8:
-                elite_whale_score += 180
-
-            if buy_pressure > 2.5:
-                elite_whale_score += 320
-
-            if whale_ratio > 3:
-                elite_whale_score += 260
-
-            score += elite_whale_score
-
-            # =========================
-            # BREAKOUT CONTINUATION
-            # =========================
-
-            continuation_score = 0
+                early_sniper_score += 240
 
             if (
-                volume_growth > 25 and
-                price_change > 10
+                price_change > 20 and
+                buys > sells * 2 and
+                txns > 80
             ):
-                continuation_score += 120
+                early_sniper_score += 320
 
-            if (
-                volume_growth > 50 and
-                liquidity_growth > 10
-            ):
-                continuation_score += 180
-
-            if (
-                buys > sells and
-                txns > 200
-            ):
-                continuation_score += 140
-
-            score += continuation_score
+            score += early_sniper_score
 
             # =========================
-            # DEAD PAIR FILTER
-            # =========================
-
-            dead_pair_penalty = 0
-
-            if volume < 1000:
-                dead_pair_penalty += 80
-
-            if txns < 25:
-                dead_pair_penalty += 120
-
-            if (
-                volume <
-                liquidity * 0.01
-            ):
-                dead_pair_penalty += 180
-
-            if (
-                buys < sells and
-                price_change < -20
-            ):
-                dead_pair_penalty += 220
-
-            score -= dead_pair_penalty
-
-            # =========================
-            # FAKE PUMP FILTER
-            # =========================
-
-            fake_pump_penalty = 0
-
-            if (
-                market_cap > 10000000 and
-                liquidity < 50000
-            ):
-                fake_pump_penalty += 400
-
-            if (
-                volume > liquidity * 50
-            ):
-                fake_pump_penalty += 350
-
-            if (
-                buys > 500 and
-                sells < 5
-            ):
-                fake_pump_penalty += 300
-
-            if (
-                txns < 20 and
-                volume > 100000
-            ):
-                fake_pump_penalty += 300
-
-            if (
-                age_hours < 2 and
-                liquidity < 10000 and
-                market_cap > 5000000
-            ):
-                fake_pump_penalty += 500
-
-            score -= fake_pump_penalty
-
-            # =========================
-            # SCORE DECAY
-            # =========================
-
-            if age_hours > 2000:
-                score *= 0.7
-
-            if age_hours > 8000:
-                score *= 0.5
-
-            score = int(score)
-
-            # =========================
-            # SMART RISK ENGINE
+            # RISK ENGINE
             # =========================
 
             risk = "HIGH"
@@ -568,12 +454,6 @@ def scan():
                 risk = "LOW"
 
             if (
-                market_cap > 100000000 and
-                liquidity < 50000
-            ):
-                risk = "EXTREME"
-
-            if (
                 market_cap >
                 liquidity * 300
             ):
@@ -582,58 +462,13 @@ def scan():
             if rug_probability >= 50:
                 risk = "EXTREME"
 
-            if (
-                age_hours < 6 and
-                liquidity < 15000
-            ):
-                risk = "EXTREME"
-
-            if (
-                price_change > 1000 and
-                liquidity < 30000
-            ):
-                risk = "EXTREME"
-
-            # =========================
-            # IMPERSONATION FILTER
-            # =========================
-
-            suspicious_symbols = [
-                "pump",
-                "pepe",
-                "bonk",
-                "trump",
-                "doge",
-                "shib",
-                "moon",
-                "ai"
-            ]
-
-            if (
-                symbol.lower() in suspicious_symbols and
-                age_hours > 720
-            ):
-                risk = "HIGH"
-
-            if price_change > 50000:
-                risk = "EXTREME"
-
-            if (
-                market_cap > 1000000000 and
-                volume < 500000
-            ):
-                risk = "EXTREME"
-
             # =========================
             # SIGNAL ENGINE
             # =========================
 
             signal = "NO"
 
-            if score >= 2200:
-                signal = "APEX LEGEND"
-
-            elif score >= 1700:
+            if score >= 1700:
                 signal = "SUPERNOVA"
 
             elif score >= 1200:
@@ -672,14 +507,8 @@ def scan():
             if score >= 1100:
                 rating = "👑 GOD CANDLE"
 
-            if score >= 1400:
-                rating = "🌋 NUCLEAR"
-
-            if score >= 1800:
+            if score >= 1600:
                 rating = "🧠 AI SUPERNOVA"
-
-            if score >= 2300:
-                rating = "👑 KING SLAYER"
 
             # =========================
             # SMART CONFIDENCE ENGINE
@@ -687,14 +516,10 @@ def scan():
 
             confidence = 50
 
-            # SCORE CONFIDENCE
-
             confidence += min(
                 int(score / 40),
                 35
             )
-
-            # LIQUIDITY CONFIDENCE
 
             if liquidity > 25000:
                 confidence += 5
@@ -702,119 +527,21 @@ def scan():
             if liquidity > 100000:
                 confidence += 5
 
-            if liquidity > 500000:
-                confidence += 5
-
-            # VOLUME QUALITY
-
-            if volume > liquidity * 0.5:
-                confidence += 5
-
-            if volume > liquidity:
-                confidence += 5
-
-            # BUY PRESSURE
-
             if buys > sells:
                 confidence += 5
 
-            if buys > sells * 2:
-                confidence += 5
-
-            # RUG PENALTIES
-
-            if rug_probability >= 20:
-                confidence -= 10
-
             if rug_probability >= 40:
-                confidence -= 20
-
-            if rug_probability >= 60:
-                confidence -= 35
-
-            # SCAM DETECTION PENALTIES
-
-            if (
-                market_cap > 100000000 and
-                liquidity < 50000
-            ):
-                confidence -= 40
-
-            if (
-                market_cap >
-                liquidity * 300
-            ):
-                confidence -= 35
-
-            if liquidity < 15000:
-                confidence -= 20
-
-            if (
-                age_hours < 6 and
-                txns < 40
-            ):
                 confidence -= 25
 
-            if (
-                price_change > 1000 and
-                liquidity < 30000
-            ):
-                confidence -= 40
-
-            # IMPERSONATION FILTER
-
-            suspicious_symbols = [
-                "pump",
-                "pepe",
-                "bonk",
-                "trump",
-                "doge",
-                "shib",
-                "moon",
-                "ai",
-                "meme"
-            ]
-
-            if (
-                symbol.lower() in suspicious_symbols and
-                age_hours > 720
-            ):
-                confidence -= 30
-
-            # absurd price explosions
-
-            if price_change > 50000:
-                confidence -= 50
-
-            # suspicious valuation
-
-            if (
-                market_cap > 1000000000 and
-                volume < 500000
-            ):
-                confidence -= 40
-
-            # DEAD TOKEN PENALTY
-
-            if volume < 1000:
-                confidence -= 20
-
-            if txns < 20:
-                confidence -= 20
-
-            # FINAL SCAM OVERRIDE
-
             if risk == "EXTREME":
-                confidence = min(confidence, 25)
-
-            elif risk == "HIGH":
-                confidence = min(confidence, 55)
-
-            # FINAL LIMITS
+                confidence = min(
+                    confidence,
+                    25
+                )
 
             confidence = max(
                 5,
-                min(confidence, 99)
+                min(confidence,99)
             )
 
             # =========================
@@ -838,7 +565,10 @@ def scan():
 
             token_type = "TRENDING"
 
-            if age_hours < 1:
+            if age_hours < 0.25:
+                token_type = "🚨 STEALTH LAUNCH"
+
+            elif age_hours < 1:
                 token_type = "🔥 JUST LAUNCHED"
 
             elif age_hours < 3:
@@ -867,7 +597,7 @@ def scan():
                     liquidity,2
                 ),
                 "volume": round(volume,2),
-                "score": score,
+                "score": int(score),
                 "rating": rating,
                 "risk": risk,
                 "signal": signal,
@@ -899,9 +629,7 @@ def scan():
             momentum_memory[key] = {
                 "volume": volume,
                 "liquidity": liquidity,
-                "price": price,
-                "score": score,
-                "seen": now
+                "price": price
             }
 
         except Exception as e:
@@ -917,8 +645,6 @@ def scan():
 
     final_coins.sort(
         key=lambda x: (
-            x["type"] == "🔥 JUST LAUNCHED",
-            x["type"] == "🚀 NEW PAIR",
             x["score"],
             x["volume"],
             x["liquidity"]
