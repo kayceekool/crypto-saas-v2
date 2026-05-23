@@ -441,11 +441,15 @@ def scan():
 
             score += early_sniper_score
 
-            # =========================
-            # RISK ENGINE
+          # =========================
+            # ADVANCED RISK ENGINE
             # =========================
 
             risk = "HIGH"
+
+            # =========================
+            # BASE LIQUIDITY RISK
+            # =========================
 
             if liquidity > 30000:
                 risk = "MEDIUM"
@@ -453,15 +457,113 @@ def scan():
             if liquidity > 100000:
                 risk = "LOW"
 
+            # =========================
+            # FDV / LIQUIDITY TRAPS
+            # =========================
+
             if (
                 market_cap >
                 liquidity * 300
             ):
                 risk = "EXTREME"
 
+            if (
+                market_cap >
+                liquidity * 150
+            ):
+                risk = "HIGH"
+
+            # =========================
+            # RUG DETECTION
+            # =========================
+
             if rug_probability >= 50:
                 risk = "EXTREME"
 
+            if rug_probability >= 35:
+                risk = "HIGH"
+
+            # =========================
+            # FAKE MEME DETECTION
+            # =========================
+
+            suspicious_symbols = [
+                "pump",
+                "pepe",
+                "bonk",
+                "doge",
+                "shib",
+                "trump",
+                "moon",
+                "100x",
+                "elon",
+                "meme"
+            ]
+
+            if (
+                symbol.lower() in suspicious_symbols and
+                age_hours > 240
+            ):
+                risk = "HIGH"
+
+            # =========================
+            # DEAD TOKEN DETECTION
+            # =========================
+
+            if (
+                age_hours > 720 and
+                volume < 5000
+            ):
+                risk = "HIGH"
+
+            if (
+                age_hours > 2000 and
+                volume < 10000
+            ):
+                risk = "EXTREME"
+
+            # =========================
+            # FAKE VOLUME DETECTION
+            # =========================
+
+            if (
+                volume > liquidity * 40
+            ):
+                risk = "EXTREME"
+
+            if (
+                buys > 500 and
+                sells < 10
+            ):
+                risk = "EXTREME"
+
+            # =========================
+            # EXTREME PRICE SPIKE
+            # =========================
+
+            if (
+                price_change > 50000
+            ):
+                risk = "EXTREME"
+
+            # =========================
+            # OLD TOKEN REJECTION
+            # =========================
+
+            if age_hours > 5000:
+                risk = "HIGH"
+
+            # =========================
+            # SCAM CONFIDENCE KILLER
+            # =========================
+
+            scam_penalty = 0
+
+            if risk == "HIGH":
+                scam_penalty += 35
+
+            if risk == "EXTREME":
+                scam_penalty += 70
             # =========================
             # SIGNAL ENGINE
             # =========================
@@ -510,16 +612,24 @@ def scan():
             if score >= 1600:
                 rating = "🧠 AI SUPERNOVA"
 
-            # =========================
+           # =========================
             # SMART CONFIDENCE ENGINE
             # =========================
 
             confidence = 50
 
+            # =========================
+            # SCORE BONUS
+            # =========================
+
             confidence += min(
-                int(score / 40),
-                35
+                int(score / 60),
+                25
             )
+
+            # =========================
+            # LIQUIDITY BONUS
+            # =========================
 
             if liquidity > 25000:
                 confidence += 5
@@ -527,23 +637,93 @@ def scan():
             if liquidity > 100000:
                 confidence += 5
 
+            # =========================
+            # BUY PRESSURE BONUS
+            # =========================
+
             if buys > sells:
                 confidence += 5
 
-            if rug_probability >= 40:
+            if buys > sells * 2:
+                confidence += 5
+
+            # =========================
+            # EARLY TOKEN BONUS
+            # =========================
+
+            if age_hours < 6:
+                confidence += 10
+
+            if age_hours < 2:
+                confidence += 10
+
+            # =========================
+            # SCAM PENALTIES
+            # =========================
+
+            confidence -= scam_penalty
+
+            # =========================
+            # DEAD TOKEN PENALTIES
+            # =========================
+
+            if age_hours > 720:
+                confidence -= 15
+
+            if age_hours > 3000:
                 confidence -= 25
+
+            # =========================
+            # FAKE MEME PENALTY
+            # =========================
+
+            suspicious_symbols = [
+                "pump",
+                "pepe",
+                "bonk",
+                "doge",
+                "shib",
+                "moon",
+                "100x",
+                "elon"
+            ]
+
+            if (
+                symbol.lower() in suspicious_symbols and
+                age_hours > 240
+            ):
+                confidence -= 40
+
+            # =========================
+            # LOW ACTIVITY PENALTY
+            # =========================
+
+            if volume < 5000:
+                confidence -= 15
+
+            if txns < 25:
+                confidence -= 15
+
+            # =========================
+            # FINAL RISK CAPS
+            # =========================
+
+            if risk == "HIGH":
+                confidence = min(
+                    confidence,
+                    55
+                )
 
             if risk == "EXTREME":
                 confidence = min(
                     confidence,
-                    25
+                    20
                 )
 
             confidence = max(
                 5,
                 min(confidence,99)
             )
-
             # =========================
             # WHALES
             # =========================
