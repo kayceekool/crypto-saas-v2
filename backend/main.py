@@ -1,7 +1,8 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
-# REAL SNIPER ENGINE V3
+# REAL SNIPER ENGINE V4
 # Pump.fun Early Detection Upgrade
+# Advanced Scam Filtering Upgrade
 # ================================
 
 from flask import Flask, jsonify
@@ -441,15 +442,11 @@ def scan():
 
             score += early_sniper_score
 
-          # =========================
-            # ADVANCED RISK ENGINE
+            # =========================
+            # SMART RISK ENGINE V3
             # =========================
 
             risk = "HIGH"
-
-            # =========================
-            # BASE LIQUIDITY RISK
-            # =========================
 
             if liquidity > 30000:
                 risk = "MEDIUM"
@@ -458,8 +455,63 @@ def scan():
                 risk = "LOW"
 
             # =========================
-            # FDV / LIQUIDITY TRAPS
+            # OFFICIAL TOKEN DETECTION
             # =========================
+
+            official_like_tokens = [
+                "sol",
+                "usdc",
+                "usdt",
+                "btc",
+                "eth"
+            ]
+
+            meme_impersonation_tokens = [
+                "pump",
+                "pepe",
+                "bonk",
+                "wojak",
+                "doge",
+                "shib",
+                "trump",
+                "moon",
+                "100x",
+                "meme",
+                "ai"
+            ]
+
+            # =========================
+            # FAKE MEME CLONE DETECTION
+            # =========================
+
+            if (
+                symbol.lower() in meme_impersonation_tokens and
+                age_hours > 168
+            ):
+                risk = "EXTREME"
+
+            if (
+                symbol.lower() in meme_impersonation_tokens and
+                age_hours > 72 and
+                volume < 500000
+            ):
+                risk = "EXTREME"
+
+            if (
+                age_hours > 500 and
+                volume < liquidity * 0.15
+            ):
+                risk = "HIGH"
+
+            # =========================
+            # MARKET CAP FRAUD
+            # =========================
+
+            if (
+                market_cap > 100000000 and
+                liquidity < 50000
+            ):
+                risk = "EXTREME"
 
             if (
                 market_cap >
@@ -467,58 +519,22 @@ def scan():
             ):
                 risk = "EXTREME"
 
-            if (
-                market_cap >
-                liquidity * 150
-            ):
-                risk = "HIGH"
-
             # =========================
-            # RUG DETECTION
+            # RUG CONDITIONS
             # =========================
 
             if rug_probability >= 50:
                 risk = "EXTREME"
 
-            if rug_probability >= 35:
-                risk = "HIGH"
-
-            # =========================
-            # FAKE MEME DETECTION
-            # =========================
-
-            suspicious_symbols = [
-                "pump",
-                "pepe",
-                "bonk",
-                "doge",
-                "shib",
-                "trump",
-                "moon",
-                "100x",
-                "elon",
-                "meme"
-            ]
-
             if (
-                symbol.lower() in suspicious_symbols and
-                age_hours > 240
+                age_hours < 6 and
+                liquidity < 15000
             ):
-                risk = "HIGH"
-
-            # =========================
-            # DEAD TOKEN DETECTION
-            # =========================
+                risk = "EXTREME"
 
             if (
-                age_hours > 720 and
-                volume < 5000
-            ):
-                risk = "HIGH"
-
-            if (
-                age_hours > 2000 and
-                volume < 10000
+                price_change > 1000 and
+                liquidity < 30000
             ):
                 risk = "EXTREME"
 
@@ -527,43 +543,52 @@ def scan():
             # =========================
 
             if (
-                volume > liquidity * 40
+                volume > liquidity * 20
             ):
                 risk = "EXTREME"
 
             if (
-                buys > 500 and
-                sells < 10
+                buys > sells * 20 and
+                txns < 80
             ):
                 risk = "EXTREME"
 
             # =========================
-            # EXTREME PRICE SPIKE
+            # DEAD TOKEN DETECTION
             # =========================
 
             if (
-                price_change > 50000
+                age_hours > 2000 and
+                volume < 10000
             ):
-                risk = "EXTREME"
-
-            # =========================
-            # OLD TOKEN REJECTION
-            # =========================
-
-            if age_hours > 5000:
                 risk = "HIGH"
 
             # =========================
-            # SCAM CONFIDENCE KILLER
+            # SCAM AUTO FILTER
             # =========================
 
-            scam_penalty = 0
+            if risk == "EXTREME":
 
-            if risk == "HIGH":
-                scam_penalty += 35
+                blacklist.add(symbol)
+
+                continue
+
+            # =========================
+            # CONFIDENCE FORCE CAP
+            # =========================
 
             if risk == "EXTREME":
-                scam_penalty += 70
+                confidence_cap = 25
+
+            elif risk == "HIGH":
+                confidence_cap = 55
+
+            elif risk == "MEDIUM":
+                confidence_cap = 75
+
+            else:
+                confidence_cap = 99
+
             # =========================
             # SIGNAL ENGINE
             # =========================
@@ -612,24 +637,16 @@ def scan():
             if score >= 1600:
                 rating = "🧠 AI SUPERNOVA"
 
-           # =========================
+            # =========================
             # SMART CONFIDENCE ENGINE
             # =========================
 
             confidence = 50
 
-            # =========================
-            # SCORE BONUS
-            # =========================
-
             confidence += min(
                 int(score / 60),
                 25
             )
-
-            # =========================
-            # LIQUIDITY BONUS
-            # =========================
 
             if liquidity > 25000:
                 confidence += 5
@@ -637,19 +654,11 @@ def scan():
             if liquidity > 100000:
                 confidence += 5
 
-            # =========================
-            # BUY PRESSURE BONUS
-            # =========================
-
             if buys > sells:
                 confidence += 5
 
             if buys > sells * 2:
                 confidence += 5
-
-            # =========================
-            # EARLY TOKEN BONUS
-            # =========================
 
             if age_hours < 6:
                 confidence += 10
@@ -661,10 +670,14 @@ def scan():
             # SCAM PENALTIES
             # =========================
 
-            confidence -= scam_penalty
+            if risk == "HIGH":
+                confidence -= 35
+
+            if risk == "EXTREME":
+                confidence -= 70
 
             # =========================
-            # DEAD TOKEN PENALTIES
+            # OLD TOKEN PENALTIES
             # =========================
 
             if age_hours > 720:
@@ -674,28 +687,7 @@ def scan():
                 confidence -= 25
 
             # =========================
-            # FAKE MEME PENALTY
-            # =========================
-
-            suspicious_symbols = [
-                "pump",
-                "pepe",
-                "bonk",
-                "doge",
-                "shib",
-                "moon",
-                "100x",
-                "elon"
-            ]
-
-            if (
-                symbol.lower() in suspicious_symbols and
-                age_hours > 240
-            ):
-                confidence -= 40
-
-            # =========================
-            # LOW ACTIVITY PENALTY
+            # LOW ACTIVITY PENALTIES
             # =========================
 
             if volume < 5000:
@@ -708,22 +700,16 @@ def scan():
             # FINAL RISK CAPS
             # =========================
 
-            if risk == "HIGH":
-                confidence = min(
-                    confidence,
-                    55
-                )
-
-            if risk == "EXTREME":
-                confidence = min(
-                    confidence,
-                    20
-                )
+            confidence = min(
+                confidence,
+                confidence_cap
+            )
 
             confidence = max(
                 5,
                 min(confidence,99)
             )
+
             # =========================
             # WHALES
             # =========================
