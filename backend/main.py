@@ -642,6 +642,7 @@ def scan():
             # =========================
 
             confidence = 50
+            confidence_cap = 99
 
             confidence += min(
                 int(score / 60),
