@@ -403,10 +403,10 @@ def scan():
             elif age_hours < 1:
                 early_sniper_score += 300
 
-            if buys > sells * 3:
+            if sells > 0 and buys > sells * 3:
                 early_sniper_score += 220
 
-            if buys > sells * 5:
+            if sells > 0 and buys > sells * 5:
                 early_sniper_score += 350
 
             if txns > 50 and age_hours < 1:
@@ -434,9 +434,11 @@ def scan():
                 early_sniper_score += 240
 
             if (
-                price_change > 20 and
-                buys > sells * 2 and
-                txns > 80
+    sells > 0 and
+    price_change > 20 and
+    buys > sells * 2 and
+    txns > 80
+):
             ):
                 early_sniper_score += 320
 
@@ -548,8 +550,10 @@ def scan():
                 risk = "EXTREME"
 
             if (
-                buys > sells * 20 and
-                txns < 80
+    sells > 0 and
+    buys > sells * 20 and
+    txns < 80
+):
             ):
                 risk = "EXTREME"
 
@@ -642,7 +646,6 @@ def scan():
             # =========================
 
             confidence = 50
-            confidence_cap = 99
 
             confidence += min(
                 int(score / 60),
@@ -655,10 +658,10 @@ def scan():
             if liquidity > 100000:
                 confidence += 5
 
-            if buys > sells:
+            if buys > sells and sells > 0:
                 confidence += 5
 
-            if buys > sells * 2:
+            if sells > 0 and buys > sells * 2:
                 confidence += 5
 
             if age_hours < 6:
