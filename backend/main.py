@@ -675,6 +675,22 @@ def scan():
             if liquidity > 100000:
                 risk = "LOW"
 
+# =========================
+            # SECURITY RISK OVERRIDES
+            # =========================
+
+            if is_freezable:
+                risk = "EXTREME"
+
+            if is_mintable:
+                risk = "HIGH"
+
+            if is_mutable:
+                risk = "HIGH"
+
+            if is_fake_clone:
+                risk = "EXTREME"
+
             # =========================
             # OFFICIAL TOKEN WHITELIST
             # =========================
