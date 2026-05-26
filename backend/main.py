@@ -1,8 +1,9 @@
 # ================================
 # 🚀 CRYPTO SCANNER AI ENGINE
-# REAL SNIPER ENGINE V4
+# REAL SNIPER ENGINE V5
 # Pump.fun Early Detection Upgrade
 # Advanced Scam Filtering Upgrade
+# Elite Trust Score Engine
 # ================================
 
 from flask import Flask, jsonify
@@ -19,8 +20,34 @@ momentum_memory = {}
 blacklist = set()
 
 # =========================
+# ELITE AI MEMORY
+# =========================
+
+paper_trades = []
+token_history = {}
+trusted_tokens = set()
+
+# =========================
+# KNOWN SCAM CLONES
+# =========================
+
+known_clone_symbols = {
+    "pepe",
+    "bonk",
+    "pump",
+    "wojak",
+    "doge",
+    "shib",
+    "moon",
+    "100x",
+    "elon",
+    "trump",
+    "meme",
+    "ai"
+}
+
+# =========================
 # FETCH PAIRS
-# PHASE 1 PUMPFUN SNIPER
 # =========================
 
 def fetch_pairs():
@@ -82,7 +109,7 @@ def fetch_pairs():
                 try:
 
                     pair_address = pair.get(
-                        "pairAddress",""
+                        "pairAddress", ""
                     )
 
                     if (
@@ -91,42 +118,40 @@ def fetch_pairs():
                     ):
                         continue
 
-                    seen_pairs.add(
-                        pair_address
-                    )
+                    seen_pairs.add(pair_address)
 
                     if (
                         pair.get(
-                            "chainId",""
+                            "chainId", ""
                         ) != "solana"
                     ):
                         continue
 
                     liquidity = float(
                         pair.get(
-                            "liquidity",{}
-                        ).get("usd",0) or 0
+                            "liquidity", {}
+                        ).get("usd", 0) or 0
                     )
 
                     volume = float(
                         pair.get(
-                            "volume",{}
-                        ).get("h24",0) or 0
+                            "volume", {}
+                        ).get("h24", 0) or 0
                     )
 
                     txns_data = pair.get(
-                        "txns",{}
-                    ).get("h24",{})
+                        "txns", {}
+                    ).get("h24", {})
 
                     buys = int(
                         txns_data.get(
-                            "buys",0
+                            "buys", 0
                         )
                     )
 
                     sells = int(
                         txns_data.get(
-                            "sells",0
+                            "sells", 0
                         )
                     )
 
@@ -171,8 +196,8 @@ def scan():
         try:
 
             symbol = (
-                pair.get("baseToken",{})
-                .get("symbol","UNKNOWN")
+                pair.get("baseToken", {})
+                .get("symbol", "UNKNOWN")
                 .upper()
             )
 
@@ -180,38 +205,38 @@ def scan():
                 continue
 
             pair_address = pair.get(
-                "pairAddress",""
+                "pairAddress", ""
             )
 
             price = float(
-                pair.get("priceUsd",0) or 0
+                pair.get("priceUsd", 0) or 0
             )
 
             liquidity = float(
-                pair.get("liquidity",{})
-                .get("usd",0) or 0
+                pair.get("liquidity", {})
+                .get("usd", 0) or 0
             )
 
             volume = float(
-                pair.get("volume",{})
-                .get("h24",0) or 0
+                pair.get("volume", {})
+                .get("h24", 0) or 0
             )
 
             price_change = float(
-                pair.get("priceChange",{})
-                .get("h24",0) or 0
+                pair.get("priceChange", {})
+                .get("h24", 0) or 0
             )
 
             txns_data = pair.get(
-                "txns",{}
-            ).get("h24",{})
+                "txns", {}
+            ).get("h24", {})
 
             buys = int(
-                txns_data.get("buys",0)
+                txns_data.get("buys", 0)
             )
 
             sells = int(
-                txns_data.get("sells",0)
+                txns_data.get("sells", 0)
             )
 
             txns = buys + sells
@@ -221,7 +246,7 @@ def scan():
             )
 
             fdv = float(
-                pair.get("fdv",0) or 0
+                pair.get("fdv", 0) or 0
             )
 
             market_cap = fdv
@@ -235,8 +260,43 @@ def scan():
                 ) / 3600
 
             # =========================
+            # TOKEN HISTORY ENGINE
+            # =========================
+
+            history_key = pair_address
+
+            if history_key not in token_history:
+
+                token_history[history_key] = {
+                    "first_seen": now,
+                    "highest_score": 0,
+                    "highest_volume": volume,
+                    "highest_price": price
+                }
+
+            history = token_history[history_key]
+
+            # =========================
             # SMART FILTERS
             # =========================
+
+            if (
+                symbol.lower() in known_clone_symbols and
+                age_hours > 72
+            ):
+                continue
+
+            if (
+                age_hours > 720 and
+                volume < 10000
+            ):
+                continue
+
+            if (
+                liquidity > 0 and
+                volume > liquidity * 25
+            ):
+                continue
 
             if liquidity < 5000:
                 continue
@@ -434,18 +494,63 @@ def scan():
                 early_sniper_score += 240
 
             if (
-    sells > 0 and
-    price_change > 20 and
-    buys > sells * 2 and
-    txns > 80
-):
+                sells > 0 and
+                price_change > 20 and
+                buys > sells * 2 and
+                txns > 80
             ):
                 early_sniper_score += 320
 
             score += early_sniper_score
 
             # =========================
-            # SMART RISK ENGINE V3
+            # TRUST SCORE ENGINE
+            # =========================
+
+            trust_score = 0
+
+            if liquidity > 25000:
+                trust_score += 15
+
+            if liquidity > 100000:
+                trust_score += 20
+
+            if volume > liquidity * 0.3:
+                trust_score += 15
+
+            if buys > sells and sells > 0:
+                trust_score += 10
+
+            if age_hours < 24:
+                trust_score += 15
+
+            if whale_ratio > 1:
+                trust_score += 10
+
+            if rug_probability < 20:
+                trust_score += 15
+
+            if symbol.lower() in known_clone_symbols:
+                trust_score -= 60
+
+            if age_hours > 500:
+                trust_score -= 30
+
+            if (
+                liquidity > 0 and
+                volume > liquidity * 20
+            ):
+                trust_score -= 50
+
+            trust_score = max(
+                0,
+                min(trust_score, 100)
+            )
+
+            score += int(trust_score * 2)
+
+            # =========================
+            # SMART RISK ENGINE
             # =========================
 
             risk = "HIGH"
@@ -456,62 +561,9 @@ def scan():
             if liquidity > 100000:
                 risk = "LOW"
 
-            # =========================
-            # OFFICIAL TOKEN DETECTION
-            # =========================
-
-            official_like_tokens = [
-                "sol",
-                "usdc",
-                "usdt",
-                "btc",
-                "eth"
-            ]
-
-            meme_impersonation_tokens = [
-                "pump",
-                "pepe",
-                "bonk",
-                "wojak",
-                "doge",
-                "shib",
-                "trump",
-                "moon",
-                "100x",
-                "meme",
-                "ai"
-            ]
-
-            # =========================
-            # FAKE MEME CLONE DETECTION
-            # =========================
-
             if (
-                symbol.lower() in meme_impersonation_tokens and
+                symbol.lower() in known_clone_symbols and
                 age_hours > 168
-            ):
-                risk = "EXTREME"
-
-            if (
-                symbol.lower() in meme_impersonation_tokens and
-                age_hours > 72 and
-                volume < 500000
-            ):
-                risk = "EXTREME"
-
-            if (
-                age_hours > 500 and
-                volume < liquidity * 0.15
-            ):
-                risk = "HIGH"
-
-            # =========================
-            # MARKET CAP FRAUD
-            # =========================
-
-            if (
-                market_cap > 100000000 and
-                liquidity < 50000
             ):
                 risk = "EXTREME"
 
@@ -520,10 +572,6 @@ def scan():
                 liquidity * 300
             ):
                 risk = "EXTREME"
-
-            # =========================
-            # RUG CONDITIONS
-            # =========================
 
             if rug_probability >= 50:
                 risk = "EXTREME"
@@ -540,26 +588,12 @@ def scan():
             ):
                 risk = "EXTREME"
 
-            # =========================
-            # FAKE VOLUME DETECTION
-            # =========================
-
             if (
-                volume > liquidity * 20
+                sells > 0 and
+                buys > sells * 20 and
+                txns < 80
             ):
                 risk = "EXTREME"
-
-            if (
-    sells > 0 and
-    buys > sells * 20 and
-    txns < 80
-):
-            ):
-                risk = "EXTREME"
-
-            # =========================
-            # DEAD TOKEN DETECTION
-            # =========================
 
             if (
                 age_hours > 2000 and
@@ -567,18 +601,13 @@ def scan():
             ):
                 risk = "HIGH"
 
-            # =========================
-            # SCAM AUTO FILTER
-            # =========================
-
             if risk == "EXTREME":
 
                 blacklist.add(symbol)
-
                 continue
 
             # =========================
-            # CONFIDENCE FORCE CAP
+            # CONFIDENCE CAPS
             # =========================
 
             if risk == "EXTREME":
@@ -670,29 +699,17 @@ def scan():
             if age_hours < 2:
                 confidence += 10
 
-            # =========================
-            # SCAM PENALTIES
-            # =========================
-
             if risk == "HIGH":
                 confidence -= 35
 
             if risk == "EXTREME":
                 confidence -= 70
 
-            # =========================
-            # OLD TOKEN PENALTIES
-            # =========================
-
             if age_hours > 720:
                 confidence -= 15
 
             if age_hours > 3000:
                 confidence -= 25
-
-            # =========================
-            # LOW ACTIVITY PENALTIES
-            # =========================
 
             if volume < 5000:
                 confidence -= 15
@@ -701,8 +718,14 @@ def scan():
                 confidence -= 15
 
             # =========================
-            # FINAL RISK CAPS
+            # TRUST SCORE CAPS
             # =========================
+
+            if trust_score < 40:
+                confidence = min(confidence, 45)
+
+            if trust_score < 25:
+                confidence = min(confidence, 25)
 
             confidence = min(
                 confidence,
@@ -711,7 +734,7 @@ def scan():
 
             confidence = max(
                 5,
-                min(confidence,99)
+                min(confidence, 99)
             )
 
             # =========================
@@ -756,22 +779,17 @@ def scan():
             coin = {
                 "type": token_type,
                 "symbol": symbol,
-                "marketCap": round(
-                    market_cap,2
-                ),
-                "price": round(price,8),
-                "priceChange": round(
-                    price_change,2
-                ),
-                "liquidity": round(
-                    liquidity,2
-                ),
-                "volume": round(volume,2),
+                "marketCap": round(market_cap, 2),
+                "price": round(price, 8),
+                "priceChange": round(price_change, 2),
+                "liquidity": round(liquidity, 2),
+                "volume": round(volume, 2),
                 "score": int(score),
                 "rating": rating,
                 "risk": risk,
                 "signal": signal,
                 "confidence": confidence,
+                "trustScore": trust_score,
                 "whales": whales,
                 "age": f"{round(age_hours,1)}h",
                 "url": (
@@ -815,9 +833,9 @@ def scan():
 
     final_coins.sort(
         key=lambda x: (
+            x["trustScore"],
             x["score"],
-            x["volume"],
-            x["liquidity"]
+            x["volume"]
         ),
         reverse=True
     )
