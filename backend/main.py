@@ -251,6 +251,120 @@ def scan():
 
             market_cap = fdv
 
+# =========================
+            # TOKEN SECURITY ENGINE
+            # =========================
+
+            base_token = pair.get("baseToken", {})
+
+            token_name = (
+                base_token.get("name", "")
+                .lower()
+            )
+
+            symbol_lower = symbol.lower()
+
+            # default flags
+
+            is_freezable = False
+            is_mintable = False
+            is_mutable = False
+            is_fake_clone = False
+            trusted_project = False
+
+            # =========================
+            # TRUSTED PROJECTS
+            # =========================
+
+            trusted_projects = [
+                "pump",
+                "pumpfun",
+                "raydium",
+                "jupiter",
+                "bonk",
+                "pepe"
+            ]
+
+            if (
+                symbol_lower in trusted_projects or
+                token_name in trusted_projects
+            ):
+                trusted_project = True
+
+            # =========================
+            # FREEZABLE TOKEN FILTER
+            # =========================
+
+            labels = pair.get("labels", [])
+
+            if isinstance(labels, list):
+
+                labels_lower = [
+                    str(x).lower()
+                    for x in labels
+                ]
+
+                if "freezable" in labels_lower:
+                    is_freezable = True
+
+                if "mintable" in labels_lower:
+                    is_mintable = True
+
+                if "mutable" in labels_lower:
+                    is_mutable = True
+
+            # =========================
+            # CLONE DETECTION
+            # =========================
+
+            fake_keywords = [
+                "official",
+                "v2",
+                "classic",
+                "new",
+                "moon",
+                "100x",
+                "ai",
+                "elon"
+            ]
+
+            for word in fake_keywords:
+
+                if word in token_name:
+                    is_fake_clone = True
+
+            # =========================
+            # SECURITY AUTO FLAGS
+            # =========================
+
+            if (
+                is_freezable and
+                not trusted_project
+            ):
+                blacklist.add(symbol)
+                continue
+
+            if (
+                is_mintable and
+                age_hours > 24
+            ):
+                blacklist.add(symbol)
+                continue
+
+            if (
+                is_mutable and
+                age_hours > 72
+            ):
+                blacklist.add(symbol)
+                continue
+
+            if (
+                is_fake_clone and
+                age_hours > 24
+            ):
+                blacklist.add(symbol)
+                continue
+
             age_hours = 999999
 
             if pair_created:
