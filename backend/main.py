@@ -950,6 +950,22 @@ def scan():
             if txns < 25:
                 confidence -= 15
 
+# =========================
+            # CONTRACT SECURITY PENALTIES
+            # =========================
+
+            if is_freezable:
+                confidence -= 60
+
+            if is_mintable:
+                confidence -= 35
+
+            if is_mutable:
+                confidence -= 25
+
+            if is_fake_clone:
+                confidence -= 45
+
             # =========================
             # TRUST SCORE CAPS
             # =========================
