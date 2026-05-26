@@ -550,7 +550,7 @@ def scan():
             score += int(trust_score * 2)
 
             # =========================
-            # SMART RISK ENGINE
+            # SMART RISK ENGINE V4
             # =========================
 
             risk = "HIGH"
@@ -561,17 +561,88 @@ def scan():
             if liquidity > 100000:
                 risk = "LOW"
 
+            # =========================
+            # OFFICIAL TOKEN WHITELIST
+            # =========================
+
+            official_tokens = [
+                "sol",
+                "wsol",
+                "usdc",
+                "usdt",
+                "btc",
+                "eth"
+            ]
+
+            # =========================
+            # MEME / CLONE TOKENS
+            # =========================
+
+            dangerous_memes = [
+                "pump",
+                "pepe",
+                "bonk",
+                "wojak",
+                "doge",
+                "shib",
+                "moon",
+                "100x",
+                "meme",
+                "ai",
+                "elon",
+                "trump"
+            ]
+
+            # =========================
+            # HARD SCAM FILTER
+            # =========================
+
             if (
-                symbol.lower() in known_clone_symbols and
-                age_hours > 168
+                symbol.lower() in dangerous_memes and
+                symbol.lower() not in official_tokens
+            ):
+
+                # Old meme clones are almost always garbage
+                if age_hours > 72:
+                    risk = "EXTREME"
+
+                # Fake trending meme token
+                if (
+                    volume < liquidity * 0.30
+                ):
+                    risk = "EXTREME"
+
+                # Weak transaction activity
+                if txns < 150:
+                    risk = "EXTREME"
+
+                # Weak buy pressure
+                if buys <= sells:
+                    risk = "EXTREME"
+
+                # Suspicious price stagnation
+                if abs(price_change) < 1:
+                    risk = "EXTREME"
+
+            # =========================
+            # MARKETCAP FRAUD
+            # =========================
+
+            if (
+                market_cap > 100000000 and
+                liquidity < 50000
             ):
                 risk = "EXTREME"
 
             if (
                 market_cap >
-                liquidity * 300
+                liquidity * 250
             ):
                 risk = "EXTREME"
+
+            # =========================
+            # RUG CONDITIONS
+            # =========================
 
             if rug_probability >= 50:
                 risk = "EXTREME"
@@ -588,24 +659,56 @@ def scan():
             ):
                 risk = "EXTREME"
 
+            # =========================
+            # FAKE VOLUME DETECTION
+            # =========================
+
             if (
-                sells > 0 and
+                volume > liquidity * 15
+            ):
+                risk = "EXTREME"
+
+            if (
                 buys > sells * 20 and
                 txns < 80
             ):
                 risk = "EXTREME"
 
+            # =========================
+            # DEAD TOKEN DETECTION
+            # =========================
+
             if (
                 age_hours > 2000 and
                 volume < 10000
             ):
-                risk = "HIGH"
+                risk = "EXTREME"
+
+            # =========================
+            # AUTO REMOVE SCAMS
+            # =========================
 
             if risk == "EXTREME":
 
                 blacklist.add(symbol)
+
                 continue
 
+            # =========================
+            # CONFIDENCE CAPS
+            # =========================
+
+            if risk == "EXTREME":
+                confidence_cap = 15
+
+            elif risk == "HIGH":
+                confidence_cap = 45
+
+            elif risk == "MEDIUM":
+                confidence_cap = 70
+
+            else:
+                confidence_cap = 95
             # =========================
             # CONFIDENCE CAPS
             # =========================
