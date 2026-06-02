@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from websocket.routes import router as ws_router
+
+app.include_router(ws_router)
 
 from core.database import Base
 from core.database import engine
