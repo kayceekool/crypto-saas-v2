@@ -12,12 +12,18 @@ class Wallet(Base):
 
     id = Column(Integer, primary_key=True)
 
-    wallet = Column(String)
+    wallet = Column(String, unique=True)
 
-    win_rate = Column(Float)
+    total_trades = Column(Integer, default=0)
 
-    roi = Column(Float)
+    winning_trades = Column(Integer, default=0)
 
-    score = Column(Float)
+    losing_trades = Column(Integer, default=0)
 
-    rank = Column(String)
+    win_rate = Column(Float, default=0)
+
+    roi = Column(Float, default=0)
+
+    score = Column(Float, default=0)
+
+    rank = Column(String, default="UNRANKED")
