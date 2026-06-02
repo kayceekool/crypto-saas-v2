@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from websocket.routes import router as ws_router
+from services.alert_service import send_alert
 
 app.include_router(ws_router)
 
@@ -34,4 +35,17 @@ async def root():
     return {
         "status": "online",
         "engine": "SOLANA INTELLIGENCE PLATFORM V2"
+    }
+
+@app.get("/test-alert")
+async def test_alert():
+
+    await send_alert(
+        "SUPERNOVA",
+        "Test Signal",
+        "System operational"
+    )
+
+    return {
+        "success": True
     }
