@@ -1,15 +1,23 @@
+from core.config import (
+    WHALE_THRESHOLD
+)
+
+
 class WhaleDetector:
 
     @staticmethod
-    def detect(trade_size):
+    def detect(amount):
 
-        if trade_size >= 100000:
+        if amount >= 100000:
+
             return "MEGA_WHALE"
 
-        if trade_size >= 25000:
+        if amount >= 25000:
+
             return "WHALE"
 
-        if trade_size >= 5000:
+        if amount >= WHALE_THRESHOLD:
+
             return "SHARK"
 
-        return "RETAIL"
+        return None
