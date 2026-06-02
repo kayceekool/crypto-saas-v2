@@ -1,6 +1,9 @@
 import asyncio
 
 from scanners.launch_scanner import launch_loop
+from scanners.live_wallet_loop import (
+    live_wallet_loop
+)
 from scanners.dex_loop import dex_loop
 from scanners.migration_scanner import migration_loop
 from scanners.wallet_scanner import wallet_loop
