@@ -1,14 +1,15 @@
 import httpx
-from services.scoring_engine import ScoringEngine
+
+from services.scoring_engine import (
+    ScoringEngine
+)
+
 from intelligence.adaptive_ranking import (
     AdaptiveRanking
 )
 
 from intelligence.adaptive_confidence import (
     AdaptiveConfidence
-)
-token["score"] = ScoringEngine.calculate(
-    token
 )
 
 from core.config import (
@@ -29,4 +30,6 @@ class DexScanner:
                 f"{DEXSCREENER_URL}?q={query}"
             )
 
-            return r.json()
+            data = r.json()
+
+            return data
