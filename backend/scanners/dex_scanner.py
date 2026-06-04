@@ -1,6 +1,12 @@
 import httpx
 from services.scoring_engine import ScoringEngine
+from intelligence.adaptive_ranking import (
+    AdaptiveRanking
+)
 
+from intelligence.adaptive_confidence import (
+    AdaptiveConfidence
+)
 token["score"] = ScoringEngine.calculate(
     token
 )
