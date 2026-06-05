@@ -18,10 +18,6 @@ from intelligence.master_ai import (
     MasterAI
 )
 
-from intelligence.master_ai import (
-    MasterAI
-)
-
 class DexScanner:
 
     async def search(
