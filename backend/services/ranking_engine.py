@@ -5,6 +5,10 @@ class RankingEngine:
 
         return sorted(
             tokens,
-            key=lambda x: x["score"],
+            key=lambda t:
+                t.get(
+                    "score",
+                    0
+                ),
             reverse=True
         )
