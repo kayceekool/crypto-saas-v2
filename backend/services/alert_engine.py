@@ -1,9 +1,21 @@
 class AlertEngine:
 
-    @staticmethod
-    def should_alert(token):
+    subscribers = []
 
-        if token["score"] >= 800:
-            return True
+    @classmethod
+    async def broadcast(
+        cls,
+        message
+    ):
 
-        return False
+        for ws in cls.subscribers:
+
+            try:
+
+                await ws.send_json(
+                    message
+                )
+
+            except:
+
+                pass
