@@ -18,6 +18,10 @@ from intelligence.master_ai import (
     MasterAI
 )
 
+from intelligence.master_ai import (
+    MasterAI
+)
+
 class DexScanner:
 
     async def search(
@@ -106,6 +110,10 @@ class DexScanner:
                             token
                         )
                     )
+
+token = MasterAI.enhance(
+    token
+)
 
                     token["confidence"] = (
                         AdaptiveConfidence.adjust(
