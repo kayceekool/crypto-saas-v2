@@ -14,6 +14,9 @@ from intelligence.adaptive_confidence import (
     AdaptiveConfidence
 )
 
+from intelligence.master_ai import (
+    MasterAI
+)
 
 class DexScanner:
 
