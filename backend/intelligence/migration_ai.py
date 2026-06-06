@@ -5,22 +5,23 @@ class MigrationAI:
 
         score = 0
 
-        if token.get(
-            "migrated",
-            False
-        ):
-            score += 50
+        liquidity = token.get(
+            "liquidity",
+            0
+        )
 
-        if token.get(
-            "raydium",
-            False
-        ):
-            score += 100
-
-        if token.get(
+        volume = token.get(
             "volume",
             0
-        ) > 50000:
+        )
+
+        if volume > liquidity:
+            score += 50
+
+        if volume > liquidity * 2:
+            score += 100
+
+        if liquidity > 50000:
             score += 50
 
         return score
