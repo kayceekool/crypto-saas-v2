@@ -20,11 +20,8 @@ class IntelligenceHub:
 
             await AlertEngine.broadcast(
                 {
-                    "type":
-                    "top_token",
-
-                    "token":
-                    ranked[0]
+                    "type": "top_token",
+                    "token": ranked[0]
                 }
             )
 
