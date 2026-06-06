@@ -13,9 +13,19 @@ class AdaptiveRanking:
         )
 
         if pattern == "BREAKOUT":
-            token["score"] += 150
+
+            token["score"] += 250
+
+            token["signal"] = (
+                "BREAKOUT"
+            )
 
         elif pattern == "ACCUMULATION":
-            token["score"] += 75
+
+            token["score"] += 100
+
+            token["signal"] = (
+                "ACCUMULATION"
+            )
 
         return token
