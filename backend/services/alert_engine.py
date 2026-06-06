@@ -1,12 +1,14 @@
 class AlertEngine:
 
-    subscribers = []
+    subscribers = set()
 
     @classmethod
     async def broadcast(
         cls,
         message
     ):
+
+        dead = []
 
         for ws in cls.subscribers:
 
@@ -18,4 +20,12 @@ class AlertEngine:
 
             except:
 
-                pass
+                dead.append(
+                    ws
+                )
+
+        for ws in dead:
+
+            cls.subscribers.discard(
+                ws
+            )
