@@ -18,6 +18,10 @@ from intelligence.master_ai import (
     MasterAI
 )
 
+from services.rating_engine import (
+    RatingEngine
+)
+
 
 class DexScanner:
 
@@ -113,6 +117,11 @@ class DexScanner:
                         )
                     )
 
+token["rating"] = (
+    RatingEngine.rate(
+        token["score"]
+    )
+)
                     token["confidence"] = (
                         AdaptiveConfidence.adjust(
                             token.get(
