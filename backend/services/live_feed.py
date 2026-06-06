@@ -1,3 +1,5 @@
+# backend/services/live_feed.py
+
 from scanners.dex_scanner import (
     DexScanner
 )
@@ -5,7 +7,6 @@ from scanners.dex_scanner import (
 from services.intelligence_hub import (
     IntelligenceHub
 )
-
 
 class LiveFeed:
 
