@@ -9,15 +9,19 @@ class PatternAI:
 
         liquidity = token.get("liquidity", 0)
 
+        age = token.get(
+            "age_hours",
+            999
+        )
+
         if (
-            score > 800 and
-            volume > liquidity * 3
+            age < 6 and
+            volume > liquidity * 1.5
         ):
             return "BREAKOUT"
 
         if (
-            score > 500 and
-            volume > liquidity
+            volume > liquidity * 0.75
         ):
             return "ACCUMULATION"
 
