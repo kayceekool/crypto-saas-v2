@@ -18,6 +18,7 @@ from intelligence.master_ai import (
     MasterAI
 )
 
+
 class DexScanner:
 
     async def search(
@@ -46,50 +47,49 @@ class DexScanner:
                 try:
 
                     token = {
-                        "symbol":
+                        "symbol": (
                             pair.get(
                                 "baseToken",
                                 {}
                             ).get(
                                 "symbol",
                                 "UNKNOWN"
-                            ),
+                            )
+                        ),
 
-                        "address":
+                        "address": (
                             pair.get(
                                 "pairAddress",
                                 ""
-                            ),
+                            )
+                        ),
 
-                        "price":
-                            float(
-                                pair.get(
-                                    "priceUsd",
-                                    0
-                                ) or 0
-                            ),
+                        "price": float(
+                            pair.get(
+                                "priceUsd",
+                                0
+                            ) or 0
+                        ),
 
-                        "liquidity":
-                            float(
-                                pair.get(
-                                    "liquidity",
-                                    {}
-                                ).get(
-                                    "usd",
-                                    0
-                                ) or 0
-                            ),
+                        "liquidity": float(
+                            pair.get(
+                                "liquidity",
+                                {}
+                            ).get(
+                                "usd",
+                                0
+                            ) or 0
+                        ),
 
-                        "volume":
-                            float(
-                                pair.get(
-                                    "volume",
-                                    {}
-                                ).get(
-                                    "h24",
-                                    0
-                                ) or 0
-                            ),
+                        "volume": float(
+                            pair.get(
+                                "volume",
+                                {}
+                            ).get(
+                                "h24",
+                                0
+                            ) or 0
+                        ),
 
                         "score": 0,
                         "confidence": 50
@@ -107,9 +107,11 @@ class DexScanner:
                         )
                     )
 
-token = MasterAI.enhance(
-    token
-)
+                    token = (
+                        MasterAI.enhance(
+                            token
+                        )
+                    )
 
                     token["confidence"] = (
                         AdaptiveConfidence.adjust(
