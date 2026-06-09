@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from services.market_state import (
+    MarketState
+)
 
 from websocket.routes import router as ws_router
 from services.alert_service import send_alert
