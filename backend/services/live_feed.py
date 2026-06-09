@@ -10,6 +10,14 @@ from services.market_state import (
     MarketState
 )
 
+from core.database import (
+    AsyncSessionLocal
+)
+
+from storage.token_repository import (
+    TokenRepository
+)
+
 
 class LiveFeed:
 
