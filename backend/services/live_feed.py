@@ -1,5 +1,3 @@
-# backend/services/live_feed.py
-
 from scanners.dex_scanner import (
     DexScanner
 )
@@ -7,6 +5,11 @@ from scanners.dex_scanner import (
 from services.intelligence_hub import (
     IntelligenceHub
 )
+
+from services.market_state import (
+    MarketState
+)
+
 
 class LiveFeed:
 
@@ -24,5 +27,13 @@ class LiveFeed:
                 tokens
             )
         )
+
+        MarketState.rankings = ranked
+
+        if ranked:
+
+            MarketState.top_token = (
+                ranked[0]
+            )
 
         return ranked
