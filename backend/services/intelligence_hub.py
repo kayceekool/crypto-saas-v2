@@ -6,6 +6,10 @@ from services.alert_engine import (
     AlertEngine
 )
 
+from services.alert_classifier import (
+    AlertClassifier
+)
+
 
 class IntelligenceHub:
 
@@ -18,10 +22,20 @@ class IntelligenceHub:
 
         if ranked:
 
+            top = ranked[0]
+
             await AlertEngine.broadcast(
                 {
-                    "type": "top_token",
-                    "token": ranked[0]
+                    "type":
+                        "top_token",
+
+                    "severity":
+                        AlertClassifier.level(
+                            top
+                        ),
+
+                    "token":
+                        top
                 }
             )
 
