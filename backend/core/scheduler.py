@@ -1,21 +1,56 @@
 import asyncio
 
-from scanners.launch_scanner import launch_loop
-from scanners.dex_loop import dex_loop
-from scanners.migration_scanner import migration_loop
-from scanners.wallet_scanner import wallet_loop
-from scanners.live_wallet_loop import live_wallet_loop
+from scanners.launch_scanner import (
+    launch_loop
+)
+
+from scanners.dex_loop import (
+    dex_loop
+)
+
+from scanners.migration_scanner import (
+    migration_loop
+)
+
+from scanners.wallet_scanner import (
+    wallet_loop
+)
+
+from scanners.live_wallet_loop import (
+    live_wallet_loop
+)
+
+from tasks.live_feed_loop import (
+    live_feed_loop
+)
+
 
 async def start_scheduler():
 
-    asyncio.create_task(dex_loop())
+    asyncio.create_task(
+        dex_loop()
+    )
 
-    asyncio.create_task(launch_loop())
+    asyncio.create_task(
+        launch_loop()
+    )
 
-    asyncio.create_task(migration_loop())
+    asyncio.create_task(
+        migration_loop()
+    )
 
-    asyncio.create_task(wallet_loop())
+    asyncio.create_task(
+        wallet_loop()
+    )
 
-    asyncio.create_task(live_wallet_loop())
+    asyncio.create_task(
+        live_wallet_loop()
+    )
 
-    print("All scanner tasks started")
+    asyncio.create_task(
+        live_feed_loop()
+    )
+
+    print(
+        "All scanner tasks started"
+    )
