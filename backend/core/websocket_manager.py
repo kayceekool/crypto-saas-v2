@@ -1,40 +1,6 @@
 from fastapi import WebSocket
-import json
 
 
-class WebSocketManager:
-
-    def __init__(self):
-        self.connections = []
-
-    async def connect(self, websocket):
-
-        await websocket.accept()
-
-        self.connections.append(websocket)
-
-    async def disconnect(self, websocket):
-
-        if websocket in self.connections:
-            self.connections.remove(websocket)
-
-    async def broadcast(self, message):
-
-        dead = []
-
-        for ws in self.connections:
-
-            try:
-                await ws.send_text(
-                    json.dumps(message)
-                )
-
-            except:
-
-                dead.append(ws)
-
-        for ws in dead:
-            self.disconnect(ws)
 class ConnectionManager:
 
     def __init__(self):
@@ -57,14 +23,18 @@ class ConnectionManager:
         websocket
     ):
 
-        self.connections.remove(
-            websocket
-        )
+        if websocket in self.connections:
+
+            self.connections.remove(
+                websocket
+            )
 
     async def broadcast(
         self,
         data
     ):
+
+        dead = []
 
         for connection in self.connections:
 
@@ -76,7 +46,15 @@ class ConnectionManager:
 
             except:
 
-                pass
+                dead.append(
+                    connection
+                )
+
+        for connection in dead:
+
+            self.disconnect(
+                connection
+            )
 
 
 manager = ConnectionManager()
