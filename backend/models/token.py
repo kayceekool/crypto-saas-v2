@@ -10,24 +10,71 @@ class Token(Base):
 
     __tablename__ = "tokens"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(
+        Integer,
+        primary_key=True
+    )
 
-    symbol = Column(String)
+    symbol = Column(
+        String
+    )
 
-    address = Column(String)
+    address = Column(
+        String
+    )
 
-    price = Column(Float)
+    price = Column(
+        Float
+    )
 
-    liquidity = Column(Float)
+    liquidity = Column(
+        Float
+    )
 
-    volume = Column(Float)
+    volume = Column(
+        Float
+    )
 
-    market_cap = Column(Float)
+    market_cap = Column(
+        Float
+    )
 
-    score = Column(Float)
+    score = Column(
+        Float
+    )
 
-    risk = Column(String)
+    confidence = Column(
+        Float
+    )
 
-    confidence = Column(Float)
+    risk = Column(
+        String
+    )
 
-    signal = Column(String)
+    signal = Column(
+        String
+    )
+
+    rating = Column(
+        String
+    )
+
+    age_hours = Column(
+        Float
+    )
+
+    wallet_interest = Column(
+        Float
+    )
+
+    migration_score = Column(
+        Float
+    )
+
+    launch_score = Column(
+        Float
+    )
+
+    last_seen = Column(
+        String
+    )
