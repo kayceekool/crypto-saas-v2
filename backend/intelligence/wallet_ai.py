@@ -1,16 +1,34 @@
 class WalletAI:
 
     @staticmethod
-    def calculate_score(wallet):
+    def calculate(wallet):
 
         score = 0
 
-        score += wallet.win_rate * 3
+        roi = wallet.get("roi", 0)
 
-        score += wallet.roi
+        win_rate = wallet.get("win_rate", 0)
 
-        score += (
-            wallet.total_trades * 0.2
-        )
+        trades = wallet.get("total_trades", 0)
 
-        return round(score, 2)
+        if roi > 100:
+            score += 300
+
+        elif roi > 50:
+            score += 200
+
+        elif roi > 20:
+            score += 100
+
+        if win_rate > 80:
+            score += 300
+
+        elif win_rate > 70:
+            score += 200
+
+        elif win_rate > 60:
+            score += 100
+
+        score += min(trades, 300)
+
+        return score
