@@ -1,18 +1,54 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from collections.abc import AsyncGenerator
 
-DATABASE_URL = "sqlite:///solana_ai.db"
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
+from sqlalchemy.orm import DeclarativeBase
+
+from backend.core.settings import settings
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+engine = create_async_engine(
+    settings.database_url,
+    echo=False,
+    future=True,
 )
 
-Base = declarative_base()
+
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+
+async def init_db() -> None:
+
+    async with engine.begin() as connection:
+
+        await connection.run_sync(
+            Base.metadata.create_all
+        )
+
+
+async def close_db() -> None:
+
+    await engine.dispose()
+
+
+async def get_db(
+) -> AsyncGenerator[
+    AsyncSession,
+    None,
+]:
+
+    async with SessionLocal() as session:
+
+        yield session
