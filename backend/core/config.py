@@ -1,17 +1,14 @@
-DEXSCREENER_URL = (
-    "https://api.dexscreener.com/latest/dex/search"
-)
+from backend.core.settings import settings
 
-SCAN_INTERVAL = 15
 
-MAX_TOKENS = 100
+APP_NAME = settings.app_name
 
-MIN_LIQUIDITY = 5000
+APP_VERSION = settings.version
 
-SOLANA_RPC_URL = (
-    "https://api.mainnet-beta.solana.com"
-)
+DATABASE_URL = settings.database_url
 
-WHALE_THRESHOLD = 5000
+LOG_LEVEL = settings.log_level
 
-SMART_WALLET_MIN_WINRATE = 70
+HOST = settings.host
+
+PORT = settings.port
