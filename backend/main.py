@@ -1,95 +1,61 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from services.market_state import (
-    MarketState
-)
 
-from websocket.routes import router as ws_router
-from services.alert_service import send_alert
+from backend.core.health import health_manager
+from backend.core.logging import configure_logging, get_logger
+from backend.core.metrics import metrics
+from backend.core.provider_registry import provider_registry
+from backend.core.settings import settings
+from backend.runtime.lifecycle import lifecycle
 
-from core.database import Base
-from core.database import engine
 
-from core.scheduler import start_scheduler
+configure_logging()
 
-# NEW
-import asyncio
+logger = get_logger("main")
 
-# NEW
-from tasks.live_feed_loop import (
-    live_feed_loop
-)
 
-# NEW
-from services.live_feed import (
-    LiveFeed
-)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await lifecycle.start()
+
+    try:
+        yield
+
+    finally:
+        await lifecycle.stop()
+
 
 app = FastAPI(
-    title="Solana Intelligence Platform V2"
+    title=settings.app_name,
+    version=settings.version,
+    lifespan=lifespan,
 )
 
-app.include_router(ws_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
-
-Base.metadata.create_all(bind=engine)
-
-@app.on_event("startup")
-async def startup_event():
-
-    # Existing scheduler
-    await start_scheduler()
-
-    # NEW live intelligence feed
-    asyncio.create_task(
-        live_feed_loop()
-    )
 
 @app.get("/")
 async def root():
 
     return {
-        "status": "online",
-        "engine": "SOLANA INTELLIGENCE PLATFORM V2"
+        "name": settings.app_name,
+        "version": settings.version,
+        "status": lifecycle.state.value,
     }
 
-@app.get("/test-alert")
-async def test_alert():
 
-    await send_alert(
-        "SUPERNOVA",
-        "Test Signal",
-        "System operational"
-    )
+@app.get("/health")
+async def health():
 
-    return {
-        "success": True
-    }
+    return health_manager.snapshot()
 
-# NEW
-@app.get("/rankings")
-async def rankings():
 
-    return await (
-        LiveFeed.update()
-    )
+@app.get("/metrics")
+async def application_metrics():
 
-# NEW
-@app.get("/top")
-async def top():
+    return metrics.snapshot()
 
-    data = await (
-        LiveFeed.update()
-    )
 
-    if data:
-        return data[0]
+@app.get("/providers")
+async def providers():
 
-    return {}
+    return provider_registry.snapshot()
