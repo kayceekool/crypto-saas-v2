@@ -1,9 +1,27 @@
+# Solana Intelligence Platform V3
 
-SaaS PROJECT: crypto trading dashboard
+## Package 01 — Core Runtime Foundation
 
-FEATURES:
-- Authentication system
-- Dashboard UI
-- API backend
-- Database layer
-- Basic analytics
+This package establishes the V3 runtime foundation.
+
+### Included
+
+- FastAPI application
+- Async SQLAlchemy
+- SQLite database
+- Runtime lifecycle
+- Startup/shutdown management
+- Background scheduler
+- Provider registry
+- Plugin loader
+- Health monitoring
+- Runtime metrics
+- Central logging
+- Initial tests
+
+## Installation
+
+Create a virtual environment:
+
+```bash
+python -m venv .venv
