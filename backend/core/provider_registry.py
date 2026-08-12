@@ -66,6 +66,23 @@ class ProviderRegistry:
         return record.provider
 
 
+    def all(
+        self,
+    ) -> list[Any]:
+
+        records = sorted(
+            self._providers.values(),
+            key=lambda item:
+                item.priority,
+        )
+
+        return [
+            item.provider
+            for item in records
+            if item.enabled
+        ]
+
+
     def snapshot(self) -> dict:
 
         ordered = sorted(
@@ -79,7 +96,8 @@ class ProviderRegistry:
             "providers": [
 
                 {
-                    "name": item.name,
+                    "name":
+                        item.name,
 
                     "enabled":
                         item.enabled,
@@ -93,4 +111,6 @@ class ProviderRegistry:
         }
 
 
-provider_registry = ProviderRegistry()
+provider_registry = (
+    ProviderRegistry()
+)
