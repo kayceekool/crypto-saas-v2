@@ -1,20 +1,77 @@
-import asyncio
+from backend.core.provider_registry import (
+    ProviderRegistry,
+)
 
-async def launch_loop():
+from backend.providers.models import (
+    TokenMarketData,
+)
 
-    while True:
+from backend.scanners.base import (
+    BaseScanner,
+)
 
-        try:
 
-            print(
-                "[LAUNCH] scanning..."
-            )
+class LaunchScanner(BaseScanner):
 
-        except Exception as e:
+    name = "launch"
 
-            print(
-                "[LAUNCH ERROR]",
-                e
-            )
+    def __init__(
+        self,
+        registry: ProviderRegistry,
+    ):
 
-        await asyncio.sleep(20)
+        self.registry = registry
+
+    async def scan(
+        self,
+        query: str = "SOL",
+    ) -> list[TokenMarketData]:
+
+        results: list[
+            TokenMarketData
+        ] = []
+
+        pumpfun = self.registry.get(
+            "pumpfun"
+        )
+
+        if pumpfun is not None:
+
+            try:
+
+                results.extend(
+                    await pumpfun.search(
+                        query
+                    )
+                )
+
+            except Exception as exc:
+
+                print(
+                    f"LaunchScanner Pump.fun "
+                    f"error: {exc}"
+                )
+
+        # Other providers may also expose
+        # launch information in future packages.
+
+        return self._filter_recent(
+            results
+        )
+
+    @staticmethod
+    def _filter_recent(
+        tokens: list[TokenMarketData],
+    ) -> list[TokenMarketData]:
+
+        recent = []
+
+        for token in tokens:
+
+            if token.age_hours < 1:
+
+                recent.append(
+                    token
+                )
+
+        return recent
