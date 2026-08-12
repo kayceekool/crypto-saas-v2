@@ -2,6 +2,10 @@ from backend.core.database import (
     init_db,
 )
 
+from backend.scanners.scanner_manager import (
+    ScannerManager,
+)
+
 from backend.core.health import (
     health_manager,
 )
@@ -88,6 +92,9 @@ async def startup():
         priority=30,
     )
 
+    scanner_manager = ScannerManager(
+        provider_registry
+    )
 
     health_manager.set_status(
         "providers",
