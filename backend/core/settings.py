@@ -10,9 +10,13 @@ class Settings(BaseSettings):
         "Solana Intelligence Platform V3"
     )
 
-    version: str = "3.0.0-alpha.1"
+    version: str = (
+        "3.0.0-alpha.2"
+    )
 
-    environment: str = "development"
+    environment: str = (
+        "development"
+    )
 
     host: str = "0.0.0.0"
 
@@ -27,6 +31,18 @@ class Settings(BaseSettings):
     enable_metrics: bool = True
 
     scheduler_interval_seconds: float = 15.0
+
+    # Provider configuration
+
+    dexscreener_api_url: str = (
+        "https://api.dexscreener.com"
+    )
+
+    pumpfun_api_url: str = ""
+
+    helius_api_key: str = ""
+
+    helius_rpc_url: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
