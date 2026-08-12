@@ -10,16 +10,24 @@ from backend.core.logging import (
     get_logger,
 )
 
-from backend.core.plugin_loader import (
-    plugin_loader,
+from backend.core.scheduler import (
+    scheduler,
 )
 
 from backend.core.provider_registry import (
     provider_registry,
 )
 
-from backend.core.scheduler import (
-    scheduler,
+from backend.providers.dexscreener.provider import (
+    DexScreenerProvider,
+)
+
+from backend.providers.pumpfun.provider import (
+    PumpFunProvider,
+)
+
+from backend.providers.helius.provider import (
+    HeliusProvider,
 )
 
 
@@ -29,6 +37,8 @@ logger = get_logger(
 
 
 async def startup():
+
+    # Database
 
     health_manager.set_status(
         "database",
@@ -45,19 +55,48 @@ async def startup():
     )
 
 
+    # Providers
+
+    dexscreener = (
+        DexScreenerProvider()
+    )
+
+    pumpfun = (
+        PumpFunProvider()
+    )
+
+    helius = (
+        HeliusProvider()
+    )
+
+
+    provider_registry.register(
+        "dexscreener",
+        dexscreener,
+        priority=10,
+    )
+
+    provider_registry.register(
+        "pumpfun",
+        pumpfun,
+        priority=20,
+    )
+
+    provider_registry.register(
+        "helius",
+        helius,
+        priority=30,
+    )
+
+
     health_manager.set_status(
         "providers",
         "up",
-        "Registry initialized",
+        "Provider registry initialized",
     )
 
 
-    health_manager.set_status(
-        "plugins",
-        "up",
-        "Plugin loader initialized",
-    )
-
+    # Scheduler
 
     async def runtime_heartbeat():
 
