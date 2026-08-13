@@ -1,5 +1,7 @@
 import pytest
 
+import pytest_asyncio
+
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
@@ -17,16 +19,12 @@ from backend.providers.models import (
     TokenMarketData,
 )
 
-from backend.storage.intelligence_db import (
-    IntelligenceRecordModel,
-)
-
 from backend.storage.intelligence_repository import (
     IntelligenceRepository,
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db():
 
     engine = create_async_engine(
@@ -174,10 +172,7 @@ async def test_list_by_token(db):
 
     assert len(records) == 1
 
-    assert (
-        records[0].symbol
-        == "AAA"
-    )
+    assert records[0].symbol == "AAA"
 
 
 @pytest.mark.asyncio
@@ -254,8 +249,6 @@ async def test_database_model_has_primary_key(
 
     assert len(records) == 1
 
-    # The ORM model uses an auto-generated
-    # integer primary key.
     assert (
         records[0].token_address
         == "TEST123"
