@@ -1,13 +1,12 @@
 import pytest
+import pytest_asyncio
 
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
 
-from backend.core.database import (
-    Base,
-)
+from backend.core.database import Base
 
 from backend.signals.persistence import (
     SignalHistoryRecord,
@@ -18,7 +17,7 @@ from backend.storage.signal_history_db import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db():
 
     engine = create_async_engine(
@@ -192,17 +191,11 @@ async def test_resolve_signal(db):
 
     record = make_record()
 
-    saved = await (
-        SignalHistoryRepository.save(
-            db,
-            record,
-        )
+    await SignalHistoryRepository.save(
+        db,
+        record,
     )
 
-    # The adapter currently returns the
-    # logical record but not the database ID.
-    # Verify the record exists before resolving
-    # through the underlying database query.
     recent = await (
         SignalHistoryRepository.list_recent(
             db
