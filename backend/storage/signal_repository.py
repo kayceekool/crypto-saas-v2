@@ -1,24 +1,77 @@
-from models.signal_history import (
-    SignalHistory
+from datetime import datetime
+
+from backend.signals.models import (
+    SignalDecision,
+)
+
+from backend.signals.persistence import (
+    SignalHistoryRecord,
 )
 
 
 class SignalRepository:
 
     @staticmethod
-    async def save_signal(
-        db,
-        signal_data
-    ):
+    def from_decision(
+        decision: SignalDecision,
+        price: float = 0.0,
+    ) -> SignalHistoryRecord:
 
-        record = SignalHistory(
-            token=signal_data["token"],
-            signal=signal_data["signal"],
-            score=signal_data["score"],
-            confidence=signal_data["confidence"],
-            price_at_signal=signal_data["price"]
+        return SignalHistoryRecord(
+            token_address=(
+                decision.token_address
+            ),
+            symbol=decision.symbol,
+            action=decision.action,
+            score=decision.score,
+            confidence=decision.confidence,
+            risk=decision.risk,
+            reason=decision.reason,
+            price_at_signal=price,
+            created_at=(
+                decision.created_at
+            ),
         )
 
-        db.add(record)
+    @classmethod
+    def from_decisions(
+        cls,
+        decisions: list[
+            SignalDecision
+        ],
+    ) -> list[
+        SignalHistoryRecord
+    ]:
 
-        await db.commit()
+        return [
+            cls.from_decision(
+                decision
+            )
+            for decision in decisions
+        ]
+
+    @staticmethod
+    def resolve(
+        record: SignalHistoryRecord,
+        outcome: str,
+        pnl: float,
+    ) -> SignalHistoryRecord:
+
+        record.resolve(
+            outcome=outcome,
+            pnl=pnl,
+        )
+
+        return record
+
+    @staticmethod
+    def serialize(
+        records: list[
+            SignalHistoryRecord
+        ],
+    ) -> list[dict]:
+
+        return [
+            record.to_dict()
+            for record in records
+        ]
