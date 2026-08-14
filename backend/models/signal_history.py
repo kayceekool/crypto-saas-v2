@@ -6,7 +6,7 @@ from sqlalchemy import DateTime
 
 from datetime import datetime
 
-from core.database import Base
+from backend.core.database import Base
 
 
 class SignalHistory(Base):
