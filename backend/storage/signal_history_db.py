@@ -1,9 +1,7 @@
-import json
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.models.Signal_history import (
+from backend.models.signal_history import (
     SignalHistory,
 )
 
@@ -192,7 +190,6 @@ class SignalHistoryRepository:
         model = result.scalar_one_or_none()
 
         if model is None:
-
             return None
 
         model.outcome = outcome
@@ -203,6 +200,4 @@ class SignalHistoryRepository:
 
         await db.refresh(model)
 
-        return cls._from_model(
-            model
-        )
+        return cls._from_model(model)
