@@ -187,15 +187,17 @@ def test_positive_history_flows_through_pipeline():
         execution_enabled=True,
     )
 
+    intelligence = result.intelligence.intelligence
+
     assert (
-        result.intelligence
+        intelligence
         .recommendation
         .status
         == "POSITIVE"
     )
 
     assert (
-        result.intelligence
+        intelligence
         .calibration
         .status
         == "POSITIVE"
@@ -242,22 +244,24 @@ def test_negative_history_flows_through_pipeline():
         execution_enabled=True,
     )
 
+    intelligence = result.intelligence.intelligence
+
     assert (
-        result.intelligence
+        intelligence
         .recommendation
         .status
         == "NEGATIVE"
     )
 
     assert (
-        result.intelligence
+        intelligence
         .adjusted_signal
         .adjusted_score
         < 700.0
     )
 
     assert (
-        result.intelligence
+        intelligence
         .adjusted_signal
         .adjusted_confidence
         < 60.0
@@ -358,7 +362,6 @@ def test_no_real_execution_is_possible():
         is True
     )
 
-    # Package 20 remains simulation-only.
     assert (
         result.execution.executed
         is False
