@@ -1,4 +1,6 @@
 import pytest
+import pytest_asyncio
+
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -17,7 +19,7 @@ from backend.storage.execution_audit_db import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db():
 
     engine = create_async_engine(
@@ -258,6 +260,7 @@ def test_execution_audit_model_has_primary_key():
     )
 
     assert len(primary_keys) == 1
+
     assert (
         list(primary_keys)[0].name
         == "id"
