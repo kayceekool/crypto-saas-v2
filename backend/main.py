@@ -17,6 +17,10 @@ from backend.api.schemas.health import (
     HealthResponse,
 )
 
+from backend.api.schemas.health import (
+    HealthResponse,
+)
+
 
 configure_logging()
 
