@@ -2,23 +2,41 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from backend.core.health import health_manager
-from backend.core.logging import configure_logging, get_logger
-from backend.core.metrics import metrics
-from backend.core.provider_registry import provider_registry
-from backend.core.settings import settings
-from backend.runtime.lifecycle import lifecycle
+from backend.api.schemas.health import (
+    HealthResponse,
+)
+
+from backend.api.schemas.readiness import (
+    ReadinessResponse,
+)
+
+from backend.core.health import (
+    health_manager,
+)
+
+from backend.core.logging import (
+    configure_logging,
+    get_logger,
+)
+
+from backend.core.metrics import (
+    metrics,
+)
+
+from backend.core.provider_registry import (
+    provider_registry,
+)
+
+from backend.core.settings import (
+    settings,
+)
 
 from backend.routes.execution_monitor import (
     router as execution_monitor_router,
 )
 
-from backend.api.schemas.health import (
-    HealthResponse,
-)
-
-from backend.api.schemas.health import (
-    HealthResponse,
+from backend.runtime.lifecycle import (
+    lifecycle,
 )
 
 
@@ -29,12 +47,15 @@ logger = get_logger("main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
     await lifecycle.start()
 
     try:
+
         yield
 
     finally:
+
         await lifecycle.stop()
 
 
@@ -71,6 +92,21 @@ async def root():
 async def health():
 
     return health_manager.snapshot()
+
+
+@app.get(
+    "/ready",
+    response_model=ReadinessResponse,
+)
+async def readiness():
+
+    return {
+        "ready": (
+            lifecycle.state.value
+            == "running"
+        ),
+        "status": lifecycle.state.value,
+    }
 
 
 @app.get("/metrics")
