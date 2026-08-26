@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.api.schemas.execution_monitor import (
+    ExecutionMonitoringSummaryResponse,
+)
+
 from backend.core.database import get_db
 
 from backend.execution.monitor import (
@@ -14,10 +18,16 @@ router = APIRouter(
 )
 
 
-@router.get("/summary")
+@router.get(
+    "/summary",
+    response_model=(
+        ExecutionMonitoringSummaryResponse
+    ),
+)
 async def execution_summary(
     db: AsyncSession = Depends(get_db),
 ):
+
     summary = await build_execution_summary(
         db
     )
