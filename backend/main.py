@@ -9,6 +9,10 @@ from backend.core.provider_registry import provider_registry
 from backend.core.settings import settings
 from backend.runtime.lifecycle import lifecycle
 
+from backend.routes.execution_monitor import (
+    router as execution_monitor_router,
+)
+
 
 configure_logging()
 
@@ -30,6 +34,15 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     lifespan=lifespan,
+)
+
+
+# --------------------------------------------------
+# Execution monitoring API
+# --------------------------------------------------
+
+app.include_router(
+    execution_monitor_router
 )
 
 
