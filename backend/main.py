@@ -13,6 +13,10 @@ from backend.routes.execution_monitor import (
     router as execution_monitor_router,
 )
 
+from backend.api.schemas.health import (
+    HealthResponse,
+)
+
 
 configure_logging()
 
@@ -56,7 +60,10 @@ async def root():
     }
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    response_model=HealthResponse,
+)
 async def health():
 
     return health_manager.snapshot()
