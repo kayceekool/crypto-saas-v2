@@ -19,15 +19,31 @@ def test_valid_health_response():
     assert result.components == {}
 
 
+def test_status_must_be_string():
+
+    result = HealthResponse(
+        status="ready",
+        components={},
+    )
+
+    assert isinstance(
+        result.status,
+        str,
+    )
+
+
 def test_health_component():
 
     result = HealthComponent(
         status="healthy",
         detail="All systems operational.",
-        updated_at="2026-08-14T12:00:00+00:00",
+        updated_at=(
+            "2026-08-14T12:00:00+00:00"
+        ),
     )
 
     assert result.status == "healthy"
+
     assert (
         result.detail
         == "All systems operational."
@@ -50,7 +66,9 @@ def test_health_response_with_component():
     )
 
     assert (
-        result.components["database"].status
+        result.components[
+            "database"
+        ].status
         == "healthy"
     )
 
