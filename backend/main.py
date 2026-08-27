@@ -10,6 +10,10 @@ from backend.api.schemas.readiness import (
     ReadinessResponse,
 )
 
+from backend.api.schemas.status import (
+    StatusResponse,
+)
+
 from backend.core.health import (
     health_manager,
 )
@@ -106,6 +110,31 @@ async def readiness():
             == "running"
         ),
         "status": lifecycle.state.value,
+    }
+
+
+@app.get(
+    "/status",
+    response_model=StatusResponse,
+)
+async def status():
+
+    lifecycle_state = (
+        lifecycle.state.value
+    )
+
+    return {
+        "name": settings.app_name,
+        "version": settings.version,
+        "status": (
+            "healthy"
+            if lifecycle_state == "running"
+            else lifecycle_state
+        ),
+        "ready": (
+            lifecycle_state == "running"
+        ),
+        "lifecycle": lifecycle_state,
     }
 
 
