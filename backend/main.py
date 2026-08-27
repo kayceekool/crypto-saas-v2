@@ -2,6 +2,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from backend.api.errors import (
+    APIError,
+    api_error_handler,
+)
+
 from backend.api.schemas.health import (
     HealthResponse,
 )
@@ -67,6 +72,12 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     lifespan=lifespan,
+)
+
+
+app.add_exception_handler(
+    APIError,
+    api_error_handler,
 )
 
 
