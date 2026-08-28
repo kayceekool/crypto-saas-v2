@@ -7,6 +7,10 @@ from backend.api.errors import (
     api_error_handler,
 )
 
+from backend.api.middleware import (
+    RequestIDMiddleware,
+)
+
 from backend.api.schemas.health import (
     HealthResponse,
 )
@@ -78,6 +82,11 @@ app = FastAPI(
 app.add_exception_handler(
     APIError,
     api_error_handler,
+)
+
+
+app.add_middleware(
+    RequestIDMiddleware
 )
 
 
