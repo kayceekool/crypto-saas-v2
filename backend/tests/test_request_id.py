@@ -8,7 +8,7 @@ from backend.api.request_id import (
 )
 
 
-def create_app():
+def create_app() -> FastAPI:
 
     application = FastAPI()
 
@@ -62,22 +62,19 @@ def test_supplied_request_id_is_preserved():
         application
     )
 
-    supplied_id = (
-        "test-request-123"
-    )
+    supplied_id = "test-request-123"
 
     response = client.get(
         "/request-id",
         headers={
-            REQUEST_ID_HEADER:
-                supplied_id
+            REQUEST_ID_HEADER: supplied_id,
         },
     )
 
     assert response.status_code == 200
 
     assert response.json() == {
-        "request_id": supplied_id
+        "request_id": supplied_id,
     }
 
 
@@ -92,7 +89,7 @@ def test_empty_request_id_generates_new_id():
     response = client.get(
         "/request-id",
         headers={
-            REQUEST_ID_HEADER: ""
+            REQUEST_ID_HEADER: "",
         },
     )
 
@@ -118,12 +115,30 @@ def test_different_requests_get_different_ids():
         application
     )
 
-    first = client.get(
+    first_response = client.get(
         "/request-id"
-    ).json()["request_id"]
+    )
 
-    second = client.get(
+    second_response = client.get(
         "/request-id"
-    ).json()["request_id"]
+    )
 
-    assert first != second
+    assert (
+        first_response.status_code
+        == 200
+    )
+
+    assert (
+        second_response.status_code
+        == 200
+    )
+
+    first_id = first_response.json()[
+        "request_id"
+    ]
+
+    second_id = second_response.json()[
+        "request_id"
+    ]
+
+    assert first_id != second_id
