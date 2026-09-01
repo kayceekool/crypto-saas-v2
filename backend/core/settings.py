@@ -6,7 +6,9 @@ from pydantic_settings import (
 
 class Settings(BaseSettings):
 
-    app_name: str = "V3 Backend"
+    app_name: str = (
+        "Solana Intelligence Platform V3"
+    )
 
     version: str = "3.0.0"
 
