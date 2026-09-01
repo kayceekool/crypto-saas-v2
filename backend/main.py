@@ -2,6 +2,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from backend.api.cors import (
+    configure_cors,
+)
+
 from backend.api.errors import (
     APIError,
     api_error_handler,
@@ -87,6 +91,12 @@ app.add_exception_handler(
 
 app.add_middleware(
     RequestIDMiddleware
+)
+
+
+configure_cors(
+    app,
+    settings.cors_origins,
 )
 
 
