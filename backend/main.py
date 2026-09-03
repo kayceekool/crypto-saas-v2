@@ -113,15 +113,6 @@ configure_cors(
 
 
 # --------------------------------------------------
-# Execution monitoring API
-# --------------------------------------------------
-
-app.include_router(
-    execution_monitor_router
-)
-
-
-# --------------------------------------------------
 # Root
 # --------------------------------------------------
 
@@ -214,3 +205,20 @@ async def application_metrics():
 async def providers():
 
     return provider_registry.snapshot()
+
+
+# --------------------------------------------------
+# Execution monitoring API
+# --------------------------------------------------
+#
+# Register this AFTER the core application routes.
+# This makes the final application route table
+# explicitly include:
+#
+# GET /execution/summary
+#
+# --------------------------------------------------
+
+app.include_router(
+    execution_monitor_router
+)
