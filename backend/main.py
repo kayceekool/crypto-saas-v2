@@ -27,6 +27,14 @@ from backend.api.schemas.status import (
     StatusResponse,
 )
 
+from backend.api.schemas.execution_monitor import (
+    ExecutionMonitoringSummaryResponse,
+)
+
+from backend.core.database import (
+    get_db,
+)
+
 from backend.core.health import (
     health_manager,
 )
@@ -48,6 +56,10 @@ from backend.core.settings import (
     settings,
 )
 
+from backend.execution.monitor import (
+    build_execution_summary,
+)
+
 from backend.routes.execution_monitor import (
     router as execution_monitor_router,
 )
@@ -55,6 +67,12 @@ from backend.routes.execution_monitor import (
 from backend.runtime.lifecycle import (
     lifecycle,
 )
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+)
+
+from fastapi import Depends
 
 
 configure_logging()
@@ -211,11 +229,43 @@ async def providers():
 # Execution monitoring API
 # --------------------------------------------------
 #
-# Register this AFTER the core application routes.
-# This makes the final application route table
-# explicitly include:
+# The execution-monitor router remains imported and
+# defined normally.
+#
+# The endpoint is also registered explicitly on the
+# application object. This guarantees that the final
+# FastAPI application contains:
 #
 # GET /execution/summary
+#
+# --------------------------------------------------
+
+@app.get(
+    "/execution/summary",
+    response_model=(
+        ExecutionMonitoringSummaryResponse
+    ),
+)
+async def execution_summary(
+    db: AsyncSession = Depends(get_db),
+):
+
+    summary = await build_execution_summary(
+        db
+    )
+
+    return summary.to_dict()
+
+
+# --------------------------------------------------
+# Execution monitoring router
+# --------------------------------------------------
+#
+# Keep the router registration present as part of
+# the application's API structure.
+#
+# The explicit application endpoint above guarantees
+# registration on the final app object.
 #
 # --------------------------------------------------
 
